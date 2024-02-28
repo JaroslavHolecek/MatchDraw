@@ -2,7 +2,7 @@
 
 /**
  * 
- * @param {Array[NumberArray[3]]}} Array of edges in format [node_from, node_to, weight]  
+ * @param {Array[NumberArray[3]]} edges Array of edges in format [node_from, node_to, weight], , node_from and node_to are indexes (starting from 0) of nodes, weight is wight of edge between this nodes
  * @param {Boolean} maxCardinality if True, maximum possible count of edges has prirority over maximum sum of weigts 
  * @returns {IntArray} index of array is index of node_from, value is index of node_to of matching edges, -1 if (index) node is not matched
  */

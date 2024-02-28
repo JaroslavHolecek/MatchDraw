@@ -1,16 +1,27 @@
 const { NotSupportedAttributeValue } = require('./MD_Errors');
-
+/**
+ * Generate two-dimensional array 
+ * @param {int} i - first (outter) dimension
+ * @param {int} j - secon (inner) dimension 
+ * @returns Array[ i*Array[j] ]
+ */
 function ArrayTwodim(i, j) {
     return Array.from(Array(i), () => new Array(j));
 }
 
+/**
+ * Conbination C(n,k) n choose k
+ * @param {int} n 
+ * @param {int} k 
+ * @returns Array of all combinations (Arrays)  
+ */
 function combinations(n, k = 2) {
     const all_combinations = [];
 
     // Initialize the combination with the first K elements
     const currentCombination = [];
     for (let i = 0; i < k; i++) {
-        currentCombination.push(i + 1);
+        currentCombination.push(i);
     }
     all_combinations.push([...currentCombination]);
 
@@ -18,7 +29,7 @@ function combinations(n, k = 2) {
     while (true) {
         let i = k - 1;
         // Find the rightmost element that can be incremented
-        while (i >= 0 && currentCombination[i] === n - k + i + 1) {
+        while (i >= 0 && currentCombination[i] === n - k + i) {
             i--;
         }
         if (i === -1) {
@@ -36,10 +47,17 @@ function combinations(n, k = 2) {
     return all_combinations;
 }
 
-/* https://en.wikipedia.org/wiki/Maximum_weight_matching */
-function maxWeightMatching(edges){
+/**
+ * Maximum weight matching https://en.wikipedia.org/wiki/Maximum_weight_matching
+ * Currently use Edmonds algorithm.
+ * @param {Array[NumberArray[3]]} edges Array of edges in format [node_from, node_to, weight], node_from and node_to are indexes (starting from 0) of nodes, weight is wight of edge between this nodes 
+ * @param {Boolean} maximumMatches if True (default), maximum possible count of edges (matches) has prirority over maximum sum of weigts 
+ * @returns {Object} object.matched Array[IntArray[2]] list of doubles, indexes of node_from and node_to of selected edges; object.nonmatched IntArray list of non-matched nodes (its indexes)
+ * 
+ */
+function maxWeightMatching(edges, maximumMatches=true){
     const { blossom } = require('./Retrieved/EdmondsBlossom.js');
-    const result = blossom(edges, true);
+    const result = blossom(edges, maximumMatches);
     var matched = [];
     var nonmatched = [];
     for (let i_from = 0; i_from < result.length; i_from++) {

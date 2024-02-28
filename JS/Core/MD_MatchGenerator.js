@@ -1,4 +1,4 @@
-const { ArrayTwodim, combination } = require('./MD_Algorithms');
+const { ArrayTwodim, combinations } = require('./MD_Algorithms');
 
 /**
  * Generate matches so that every combination of competitors is included 
@@ -7,7 +7,7 @@ const { ArrayTwodim, combination } = require('./MD_Algorithms');
  * @returns {Array[Array]} - Array of individual matches that are Array of competitor
  */
 function every2every(individuals, num = 2){
-    let ids = combination(individuals.length, num);
+    let ids = combinations(individuals.length, num);
     let matches = ArrayTwodim(ids.length, num);
     for (let j = 0; j < num; j++) {
         for (let i = 0; i < ids.length; i++) {     
