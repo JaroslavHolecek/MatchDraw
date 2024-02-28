@@ -1,7 +1,5 @@
 const { combinations } = require('../Core/MD_Algorithms');
 
-console.log(combinations);
-
 describe('combinations', () => {
     test('should generate combinations of 3 elements from 5 total elements', () => {
         const n = 5;

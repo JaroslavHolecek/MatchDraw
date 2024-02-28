@@ -1,13 +1,3 @@
-const { NotSupportedAttributeValue } = require('./MD_Errors');
-/**
- * Generate two-dimensional array 
- * @param {int} i - first (outter) dimension
- * @param {int} j - secon (inner) dimension 
- * @returns Array[ i*Array[j] ]
- */
-function ArrayTwodim(i, j) {
-    return Array.from(Array(i), () => new Array(j));
-}
 
 /**
  * Conbination C(n,k) n choose k
@@ -75,4 +65,6 @@ function maxWeightMatching(edges, maximumMatches=true){
 
 }
 
-module.exports = { ArrayTwodim, combinations, maxWeightMatching };
+
+
+module.exports = { combinations, maxWeightMatching };

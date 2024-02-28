@@ -1,26 +1,38 @@
-const { ArrayTwodim, combinations } = require('./MD_Algorithms');
+const { NotSupportedAttributeValue } = require('./MD_Errors');
+const { combinations } = require('./MD_Algorithms');
+const { selectOneDimFromListByIds, selectTwoDimFromListByIds } = require('./MD_Helpers');
+
+/**
+ * @typedef {Object} DrawResult
+ * @property {Array[Array]} matches - Array of matches that are Array of competitors
+ * @property {Array} singletons - Competitors not included in any match
+ */
 
 /**
  * Generate matches so that every combination of competitors is included 
  * @param {Array} individuals - Array of individuals that will compete in matches 
  * @param {Integer} num default 2 - number of competitors in one match 
- * @returns {Array[Array]} - Array of individual matches that are Array of competitor
+ * @returns {DrawResult} - Result of draw
  */
 function every2every(individuals, num = 2){
     let ids = combinations(individuals.length, num);
-    let matches = ArrayTwodim(ids.length, num);
-    for (let j = 0; j < num; j++) {
-        for (let i = 0; i < ids.length; i++) {     
-            matches[i][j] = individuals[ids[i][j]];            
-        }        
+    return {
+        matches : selectTwoDimFromListByIds(individuals, ids),
+        singletons : [], /* no singletons in every to every */
+    };
+}
+
+
+function one4each(individuals, weights, num = 2, maximumMatches=true){
+    if(num != 2){ throw new NotSupportedAttributeValue("num", num, "Only 2 competitors in match available at the moment.")    }
+    const draw = maxWeightMatching(weights, maximumMatches);
+    return {
+        matches : selectTwoDimFromListByIds(individuals, draw.matched_edges),
+        singletons : selectOneDimFromListByIds(individuals, draw.nonmatched_nodes),
     }
-    return matches;
-}
-
-
-function one4each(ids, weights, num = 2){
-    
 
 }
 
-module.exports = {every2every};
+
+
+module.exports = {every2every, one4each };
