@@ -1,5 +1,5 @@
 const { combinations } = require('./MD_Algorithms');
-const { NotSupportedAttributeValue } = require('./MD_Errors');
+const { NotSupportedAttributeValue, NotMatchArguments } = require('./MD_Errors');
 
 /**
  * Generate two-dimensional array 
@@ -9,6 +9,14 @@ const { NotSupportedAttributeValue } = require('./MD_Errors');
  */
 function ArrayTwodim(i, j) {
     return Array.from(Array(i), () => new Array(j));
+}
+
+function SetRange(max){
+    let all =  new Set();
+    for (let index = 0; index < max; index++) {
+        all.add(index);        
+    }
+    return all;
 }
 
 const POLICY_EDMOND_WEIGHTS = {
@@ -54,9 +62,15 @@ function weightsGenerator_Edmonds(num_individuals, policy){
 
 function selectOneDimFromListByIds(list, ids){
     let outter = ids.length;
+    let list_length = list.length;
     let selected = Array(outter);
-    for (let i = 0; i < outter; i++) {     
-        selected[i] = list[ids[i]];            
+    let id;
+    for (let i = 0; i < outter; i++) {
+        id = ids[i];
+        if (id >= list_length || id < 0) {
+            throw new NotMatchArguments("list", list, "ids", ids, `value ${id} is out of range`);
+        }     
+        selected[i] = list[id];            
     }   
     return selected;
 }
@@ -64,13 +78,18 @@ function selectOneDimFromListByIds(list, ids){
 function selectTwoDimFromListByIds(list, ids){
     let outter = ids.length;
     let inner = ids[0].length
+    let list_length = list.length;
     let selected = ArrayTwodim(outter, inner);
     for (let j = 0; j < inner; j++) {
-        for (let i = 0; i < outter; i++) {     
-            selected[i][j] = list[ids[i][j]];            
+        for (let i = 0; i < outter; i++) {    
+            id = ids[i][j];
+            if (id >= list_length || id < 0) {
+                throw new NotMatchArguments("list", list, "ids", ids, `value ${id} is out of range`);
+            } 
+            selected[i][j] = list[id];            
         }        
     }
     return selected;
 }
 
-module.exports = {ArrayTwodim, POLICY_EDMOND_WEIGHTS,  weightsGenerator_Edmonds, selectOneDimFromListByIds, selectTwoDimFromListByIds};
+module.exports = {ArrayTwodim, SetRange, POLICY_EDMOND_WEIGHTS,  weightsGenerator_Edmonds, selectOneDimFromListByIds, selectTwoDimFromListByIds};
