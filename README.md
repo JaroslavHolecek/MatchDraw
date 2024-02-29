@@ -1,5 +1,6 @@
 # MatchDraw
 JavaScript library for draw of matches on various type of competition.
+See JS/showroom.js how to use high-level functions.
 
 ## Supported type - actual
     - every2every : aka table or Round-robin https://en.wikipedia.org/wiki/Round-robin_tournament, every individal plays against each other
