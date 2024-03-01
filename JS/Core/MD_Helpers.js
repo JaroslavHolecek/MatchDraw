@@ -54,7 +54,7 @@ function weightsGenerator_Edmonds(num_individuals, policy){
             });
             break;
         default:
-          throw new NotSupportedAttributeValue("policy", policy, "use polizy from POLICY_EDMOND_WEIGHTS")
+          throw new NotSupportedAttributeValue("policy", policy, "use policy from POLICY_EDMOND_WEIGHTS")
     }
     return edges;
 
@@ -92,4 +92,11 @@ function selectTwoDimFromListByIds(list, ids){
     return selected;
 }
 
-module.exports = {ArrayTwodim, SetRange, POLICY_EDMOND_WEIGHTS,  weightsGenerator_Edmonds, selectOneDimFromListByIds, selectTwoDimFromListByIds};
+module.exports = {
+    ArrayTwodim,
+    SetRange,
+    POLICY_EDMOND_WEIGHTS,
+    weightsGenerator_Edmonds,
+    selectOneDimFromListByIds,
+    selectTwoDimFromListByIds,
+};

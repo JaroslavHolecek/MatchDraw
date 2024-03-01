@@ -1,9 +1,9 @@
 
 /**
- * Conbination C(n,k) n choose k
+ * Combinations C(n,k) n choose k
  * @param {int} n 
  * @param {int} k 
- * @returns Array of all combinations (Arrays)  
+ * @returns {Array[Array]}Array of all combinations (Arrays)  
  */
 function combinations(n, k = 2) {
     const all_combinations = [];

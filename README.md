@@ -1,5 +1,6 @@
 # MatchDraw
 JavaScript library for draw of matches on various type of competition.
+
 See JS/showroom.js how to use high-level functions.
 
 ## Supported type - actual
