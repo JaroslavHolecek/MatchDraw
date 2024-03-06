@@ -92,6 +92,36 @@ function selectTwoDimFromListByIds(list, ids){
     return selected;
 }
 
+function indexesOfMaxInArray(array){
+    let indexes = [];
+
+    if (array.length == 0){
+        return indexes;
+    }
+
+    let actual_max = array[0];
+    
+    for (let index = 0; index < array.length; index++) {
+        const element = array[index];
+
+        if(element < actual_max){
+            continue;
+        }
+
+        if(element === actual_max){
+            indexes.push(index);
+            continue; 
+        }
+        
+        /* higher than actual_max */
+        indexes = [];
+        indexes.push(index);
+        actual_max = element;
+        
+    }
+    return indexes;
+}
+
 module.exports = {
     ArrayTwodim,
     SetRange,
@@ -99,4 +129,5 @@ module.exports = {
     weightsGenerator_Edmonds,
     selectOneDimFromListByIds,
     selectTwoDimFromListByIds,
+    indexesOfMaxInArray,
 };

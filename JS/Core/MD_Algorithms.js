@@ -62,9 +62,6 @@ function maxWeightMatching(edges, maximumMatches=true){
         matched_edges: matched,
         nonmatched_nodes: nonmatched,
     };
-
 }
-
-
 
 module.exports = { combinations, maxWeightMatching };
