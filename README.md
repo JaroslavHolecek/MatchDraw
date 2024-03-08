@@ -8,6 +8,8 @@ See JS/showroom.js how to use high-level functions.
     - one4each : aka one round of Swiss https://en.wikipedia.org/wiki/Swiss-system_tournament, every individual has one oponent, based on weights between each double of individuals, into weights is possible encode various of possible constraints 
 
 # TODO
+    - good names for tournament/counting types
+    - Test for Tournaments/Matches/Participants
     - KO type
     - Weights-generator for one4each for standard constraints (no repetitive match, the closer is score of players the higher chance to select them for match, include score of pravious contestant etc...)
     - Match sorter - to sort matches in plyable maner (no that one player plays consequnenting matches etc.)

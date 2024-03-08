@@ -14,4 +14,16 @@ class NotMatchArguments extends Error{
     } 
 }
 
-module.exports = {NotSupportedAttributeValue, NotMatchArguments};
+class NotOverridenFunction extends Error{
+    constructor(function_name, base_class_name, message = "", ...args) {
+        super(message, ...args);
+        this.name = "NotOverridenFunction";
+        this.message = message + `Function ${function_name} from ${base_class_name} must be overriden - let it know to developer`;
+    } 
+}
+
+module.exports = {
+    NotSupportedAttributeValue,
+    NotMatchArguments,
+    NotOverridenFunction
+};
