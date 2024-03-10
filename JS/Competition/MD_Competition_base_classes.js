@@ -92,12 +92,14 @@ class MD_Result{
  * Extend class for adding another info like place, date etc.
  */
 class MD_Tournament{
-    constructor(name, result_template, participants=[]){
+    constructor(md_id, name, result_template, results_sort_function, participants=[]){
+        this.md_id = md_id;
         this.name = name;
         this.participants = participants;
         this.matches = [];
         this.results = [];
         this.result_template = result_template;
+        this.sortResults = results_sort_function;
 
         this.initAllResults();
     }
@@ -118,6 +120,10 @@ class MD_Tournament{
         this.initResult(participant)
     }
 
+    getParticipant_byMDid(md_id){
+        return this.participants.find(p => p.md_id === md_id);
+    }
+
     get_participants_MDids(){
         return this.participants.map(participant => participant.md_id);
     }
@@ -130,6 +136,10 @@ class MD_Tournament{
         this.matches.push(match);
     }
 
+    getMatch_byMDid(md_id){
+        return this.matches.find(m => m.md_id === md_id);
+    }
+
     getMatches_playedOut(){
         return this.matches.filter(match => match.score !== null);
     }
@@ -138,9 +148,13 @@ class MD_Tournament{
         return this.matches.filter(match => match.score === null);
     }
 
+    getNextUnplayedMatch(){
+        return this.matches.find(m => m.score === null);
+    }
+
     setScoreOfMatch(match, score){
         if(match instanceof Int){
-            match = this.matches.find(m => m.md_id === match);
+            match = this.getMatch_byMDid(match);
         }        
         match.score = score;
     }
@@ -148,7 +162,32 @@ class MD_Tournament{
     draw(){
         throw new NotOverridenFunction('draw', 'MD_Tournament');
     }
+
+    arrangeMatches(){
+        console.log("In base-class function are matches left in same order they was added.");
+    }
+
+    computeResult(participant){
+        throw new NotOverridenFunction('computeResult', 'MD_Tournament');
+    }
+
+    computeResults_all(){
+        this.participants.forEach(participant => {
+            this.computeResult(participant);
+        });
+    }    
+
+    showCountedOrder(){
+        console.log("Final order:");
+        let order = 1;
+        showroomTournament.results.forEach(result => {
+            console.log(`\t${order}.\t${result.participant.name}`);
+            order++;
+        });
+    }
 }
+
+
 
 
 // const POLICY_RESULT_RESOLUTION = {
