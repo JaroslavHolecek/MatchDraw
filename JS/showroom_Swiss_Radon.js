@@ -1,16 +1,11 @@
 const {
     MD_Tournament,
     MD_Participant,    
-} = require('./Competition_base_classes');
+} = require('./Swiss_Radon');
 
 const {
     RESULT_TEMPLATES,   
 } = require('./Options');
-
-/*  ! ! ! This is not working example ! ! !
- -> it is needed to override "NotOverridenFunction" in base classes
-    See showroom_[specific tournament type].js for working example
-*/
 
 let showroomTournament = new MD_Tournament(
     1,

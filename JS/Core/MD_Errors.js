@@ -2,7 +2,7 @@ class NotSupportedAttributeValue extends Error{
     constructor(attr_name, attr_value, message = "", ...args) {
         super(message, ...args);
         this.name = "NotSupportedAttributeValue";
-        this.message = message + `not support value ${attr_value} for ${attr_name}`;
+        this.message = message + `Not support value ${attr_value} for ${attr_name}`;
     } 
 }
 

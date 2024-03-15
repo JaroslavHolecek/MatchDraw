@@ -1,4 +1,4 @@
-const { NotOverridenFunction } = require('../Core/MD_Errors');
+const { NotOverridenFunction, NotSupportedAttributeValue } = require('../Core/MD_Errors');
 
 /**
  * Basic class for tournament participant
@@ -13,14 +13,12 @@ class MD_Participant{
     constructor(id, name){
         this.md_id = id;
         this.md_name = name;
-        this.matches = []; /* list of matches where this participate */
     }
 
     toJSON(){
         return {
             md_id: this.md_id,
             md_name: this.md_name,
-            matches_md_ids: this.matches.map(match => match.md_id),
         };
     }
 
@@ -47,6 +45,10 @@ class MD_Match{
         this.md_id = id;
         this.participants = participants;
         this.score = score;
+
+        this.participants.forEach(participant => {
+            participant.matches.push(this);
+        });
     }
 
     toJSON(){
@@ -58,7 +60,7 @@ class MD_Match{
     }
 
     toString(){
-        return `Match ${this.md_id}:\n\tParticipants: ${get_participants_names}\n\tScore: ${this.score}`;
+        return `Match ${this.md_id}:\n\tParticipants: ${get_participants_names()}\n\tScore: ${this.score}`;
     }
 
     get_participants_MDids(){
@@ -95,41 +97,67 @@ class MD_Tournament{
     constructor(md_id, name, result_template, results_sort_function, participants=[]){
         this.md_id = md_id;
         this.name = name;
-        this.participants = participants;
         this.matches = [];
         this.results = [];
         this.result_template = result_template;
-        this.sortResults = results_sort_function;
+        this.sortResultsFce = results_sort_function;
 
-        this.initAllResults();
+        if(participants.length > 0) {this.initAllParticipants(participants);}
     }
 
-    initResult(participant){
-        this.results.push(new MD_Result(participant, this.result_template.copy()));
+    /* ***************************** */
+    /* *** TO OVERRIDE FUNCTIONS *** */
+    /* ***************************** */
+
+    /**
+     * Count match (probably its score) to result form. This result form can be added to result of participant
+     * @param {MD_Match} match that will be converted to result form 
+     * @return {Array(MD_Result)} array of MD_Results - one for each participant in match 
+     */
+    count_matchToResult(match){
+        /* let index_in_score = match.participants.find(p => p === result.participant); */
+        /* if (index_in_score < 0) {throw new Error(`Participant ${participant} not found in its matches - some deep Error happen...`);} */
+        throw new NotOverridenFunction('count_matchToResult', 'MD_Tournament');
+
     }
 
-    initAllResults(clear_current=false){
-        if (clear_current) {this.results = [];}
-        this.participants.forEach(participant => {
-            this.initResult(participant);
-        });
+    draw(){
+        throw new NotOverridenFunction('draw', 'MD_Tournament');
+    }
+
+
+    /* ******************************* */
+    /* * TO OVERRIDE FUNCTIONS - END * */
+    /* ******************************* */
+    /* Of course, you can override whatever you want...
+        above functions HAVE TO be overriden -> filled
+     */
+    
+    arrangeMatches(){
+        console.log("In base-class function are matches left in same order they was added.");
     }
 
     addParticipant(participant){
-        this.participants.push(participant);
-        this.initResult(participant)
+        this.results.push(new MD_Result(participant, this.result_template.template.copy()));
     }
 
-    getParticipant_byMDid(md_id){
-        return this.participants.find(p => p.md_id === md_id);
+    initAllParticipants(participants, clear_current=false){
+        if (clear_current) {this.results = [];}
+        participants.forEach(participant => {
+            this.addParticipant(participant);
+        });
+    }
+
+    getResult_byParticipantMDid(md_id){
+        return this.results.find(r => r.participant.md_id === md_id);
     }
 
     get_participants_MDids(){
-        return this.participants.map(participant => participant.md_id);
+        return this.results.map(result => result.participant.md_id);
     }
 
     get_participants_names(){
-        return this.participants.map(participant => participant.name);
+        return this.results.map(result => result.participant.name);
     }
 
     addMatch(match){
@@ -152,6 +180,10 @@ class MD_Tournament{
         return this.matches.find(m => m.score === null);
     }
 
+    getMatches_ofParticipant(participant){
+        return this.matches.filter(match => match.participants.includes(participant));
+    }
+
     setScoreOfMatch(match, score){
         if(match instanceof Int){
             match = this.getMatch_byMDid(match);
@@ -159,16 +191,32 @@ class MD_Tournament{
         match.score = score;
     }
 
-    draw(){
-        throw new NotOverridenFunction('draw', 'MD_Tournament');
+
+    /**
+     * Add result of match to tournament results of individual participants of match
+     * Use count_matchToResult() function that has to be overriden by your tournament rule
+     * @param {*} match match to be accounted
+     */
+    add_matchToResults(match){
+        if (match.score === null){ throw new NotSupportedAttributeValue("match.score", match.score, message = "Only played/filled match can be accounted");}
+        this.count_matchToResult(match).forEach(match_result => {
+            this.result_template.add(
+                this.results.find(r => r.participant === match_result.participant),
+                match_result.result
+                );
+        });
     }
 
-    arrangeMatches(){
-        console.log("In base-class function are matches left in same order they was added.");
-    }
-
-    computeResult(participant){
-        throw new NotOverridenFunction('computeResult', 'MD_Tournament');
+    /**
+     * Reset all participants result to default (template) value an fill them by all played matches from tournament list of matches
+     */
+    recount_allResults(){
+        this.results.forEach(result => {
+            result.result = this.result_template.template.copy();
+        });
+        this.getMatches_playedOut.forEach(match => {          
+            this.add_matchToResults(match, result);
+        });
     }
 
     computeResults_all(){
@@ -177,11 +225,15 @@ class MD_Tournament{
         });
     }    
 
+    sortResults(){
+        this.results.sort(this.sortResultsFce)
+    }
+
     showCountedOrder(){
         console.log("Final order:");
         let order = 1;
         showroomTournament.results.forEach(result => {
-            console.log(`\t${order}.\t${result.participant.name}`);
+            console.log(`\t${order} # : \t${result.participant}`);
             order++;
         });
     }
