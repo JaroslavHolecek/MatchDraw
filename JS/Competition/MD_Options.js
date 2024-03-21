@@ -9,12 +9,15 @@ const RESULT_TEMPLATES = {
         add(to, from){
             to.points += from.points;
         },
+        toString(){
+            return `${this.points}`;
+        },
         sort_functions: {
             /**
              * More points -> better placement
              */
-            DESC(){
-                this.results.sort((r1, r2) => r2.result.points - r1.result.points);
+            DESC(r1, r2){
+                return r2.points - r1.points;
             }
         }        
     },
@@ -22,7 +25,7 @@ const RESULT_TEMPLATES = {
     SETS_POINTS_GIVE_GET:
     {   template: {sets: 0, points_give: 0, points_get: 0},
         add(to, from){
-            to.points += from.points;
+            to.sets += from.sets;
             to.points_give += from.points_give;
             to.points_get += from.points_get;
         },
@@ -33,15 +36,15 @@ const RESULT_TEMPLATES = {
              * TODO: Winner of mutual match - list througt matches for r1.participant
              * TODO: random
              */
-            SETS_POINTS_DIFF(){
-                this.results.sort((r1, r2) => {
-                    let res = r2.result.sets - r1.result.sets;
-                    if (res !== 0){ return res; }
-                    
-                    return (r2.result.points_give - r2.result.points_get) -
-                        ((r1.result.points_give - r1.result.points_get));
-                });
+            SETS_POINTS_DIFF(r1, r2){
+                let res = r2.sets - r1.sets;
+                if (res !== 0){ return res; }
+                
+                return (r2.points_give - r2.points_get) -
+                    ((r1.points_give - r1.points_get));                
             }
         }
     },
 }
+
+module.exports = { RESULT_TEMPLATES };

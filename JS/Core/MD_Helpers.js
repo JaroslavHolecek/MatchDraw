@@ -122,6 +122,13 @@ function indexesOfMaxInArray(array){
     return indexes;
 }
 
+function showListOfObjects(message="", obj_list=[]){
+    console.log(message)
+    obj_list.forEach(obj => {
+        console.log(`\t${obj}`);
+    });
+}
+
 module.exports = {
     ArrayTwodim,
     SetRange,
@@ -130,4 +137,5 @@ module.exports = {
     selectOneDimFromListByIds,
     selectTwoDimFromListByIds,
     indexesOfMaxInArray,
+    showListOfObjects,
 };
