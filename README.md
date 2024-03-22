@@ -16,13 +16,15 @@ If you have enough money and this tool was usefull for you - it make me happy if
 
 ## Contribution
 You can contribute to project and/or make author happy via
+
     * find bugs and/or improvements
     * propose new tournament types
     * invite me ( holecek.jaroslav@email.cz ) to your tournament - I like to play everything or just meet new poeple :-)
     * send some money via
+    
         - paypal: https://paypal.me/JaroslavHolecek
         - bank (czk): 2200378568 / 2010  VS: 03170022
-        ![Bank account (CZK): 2200378568 / 2010  VS: 03170022](misc/QRPlatba_na_ucet_2001870082.png "Payment in CZK"){ width=200px }
+        - ![Bank account (CZK): 2200378568 / 2010  VS: 03170022](misc/QRPlatba_na_ucet_2001870082.png "Payment in CZK"){ width=100px }
 
 
 
