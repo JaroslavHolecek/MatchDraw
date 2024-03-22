@@ -2,7 +2,8 @@ const {
   POLICY_EDMOND_WEIGHTS,
   weightsGenerator_Edmonds,
   selectOneDimFromListByIds,
-  selectTwoDimFromListByIds, } = require('../src/Core/MD_Helpers');
+  selectTwoDimFromListByIds,
+  ArrayTwodim, } = require('../src/Core/MD_Helpers');
 
   const { NotMatchArguments } = require('../src/Core/MD_Errors');
 

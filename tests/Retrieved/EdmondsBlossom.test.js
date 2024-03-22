@@ -22,7 +22,7 @@ describe("Blossom", function () {
     test('should handle 3 edges', function () {
       var data = [[1, 2, 5], [2, 3, 11], [3, 4, 5]];
       var correctAnswer = [-1, -1, 3, 2, -1];
-      var result = blossom(data);
+      var result = blossom(data, false);
       expect(result).toEqual(correctAnswer);
     });
     test('should handle maximum cardinality', function () {
@@ -40,7 +40,7 @@ describe("Blossom", function () {
     test('should handle negative weights', function () {
       var data = [[1, 2, 2], [1, 3, -2], [2, 3, 1], [2, 4, -1], [3, 4, -6]];
       var correctAnswer = [-1, 2, 1, -1, -1];
-      var result = blossom(data);
+      var result = blossom(data, false);
       expect(result).toEqual(correctAnswer);
     });
     test('should handle negative weights with max cardinality', function () {
