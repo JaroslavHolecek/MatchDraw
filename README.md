@@ -4,8 +4,8 @@ JavaScript library for draw of matches on various type of competition.
 See showroom/[...].js how to use high-level functions.
 
 ## Supported type - actual
-    - every2every : aka table or Round-robin https://en.wikipedia.org/wiki/Round-robin_tournament, every individal plays against each other
-    - one4each : aka one round of Swiss https://en.wikipedia.org/wiki/Swiss-system_tournament, every individual has one oponent, based on weights between each double of individuals, into weights is possible encode various constraints like same club, distance in order etc... 
+ - every2every : aka table or Round-robin https://en.wikipedia.org/wiki/Round-robin_tournament, every individal plays against each other
+ - one4each : aka one round of Swiss https://en.wikipedia.org/wiki/Swiss-system_tournament, every individual has one oponent, based on weights between each double of individuals, into weights is possible encode various constraints like same club, distance in order etc... 
 
 
 ## Philosphy
@@ -17,15 +17,13 @@ If you have enough money and this tool was usefull for you - it make me happy if
 ## Contribution
 You can contribute to project and/or make author happy via
 
-    1. find bugs and/or improvements
-    2. propose new tournament types
-
-    3. invite me ( holecek.jaroslav@email.cz ) to your tournament - I like to play everything or just meet new poeple :-)
-    * send some money via
-
-        - paypal: https://paypal.me/JaroslavHolecek
-        - bank (czk): 2200378568 / 2010  VS: 03170022
-          ![Bank account (CZK): 2200378568 / 2010  VS: 03170022](misc/QRPlatba_na_ucet_2001870082.png "Payment in CZK"){ width=100px }
+ * find bugs and/or improvements
+ * propose new tournament types
+ * invite me ( holecek.jaroslav@email.cz ) to your tournament - I like to play everything or just meet new poeple :-)
+ * send some money via
+  - paypal: https://paypal.me/JaroslavHolecek
+  - bank (czk): 2200378568 / 2010  VS: 03170022
+    ![Bank account (CZK): 2200378568 / 2010  VS: 03170022](misc/QRPlatba_na_ucet_2001870082.png "Payment in CZK"){ width=100px }
 
 
 
