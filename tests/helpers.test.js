@@ -2,9 +2,9 @@ const {
   POLICY_EDMOND_WEIGHTS,
   weightsGenerator_Edmonds,
   selectOneDimFromListByIds,
-  selectTwoDimFromListByIds, } = require('../Core/MD_Helpers');
+  selectTwoDimFromListByIds, } = require('../src/Core/MD_Helpers');
 
-  const { NotMatchArguments } = require('../Core/MD_Errors');
+  const { NotMatchArguments } = require('../src/Core/MD_Errors');
 
 describe('ArrayTwodim', () => {
   test('should create empty two dim array', () => {

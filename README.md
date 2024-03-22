@@ -9,10 +9,10 @@ See showroom/[...].js how to use high-level functions.
 
 
 ## Philosphy
-I want to everybody can organize some nice tournament for their friends. Sit at the table/computer during whole event is not an activity corresponding to the 21st century.
+I wish everyone could organize a nice tournament for their friends. Sit at the table/computer during whole event is not an activity corresponding to the 21st century.
 This is core package used in my other project AdminisTournament to do this monotone and boring process for you.
 Usage is free as a lot of active poeple have not enough money or time for licencing "nonsense".
-If you have enough money and this tool was useful for you - it make me happy if you make some contribution (see below)
+If you have enough money and this tool was useful for you - it would make me happy if you make some contribution (see below).
 
 ## Contribution
 You can contribute to project and/or make author happy via

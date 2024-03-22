@@ -1,11 +1,11 @@
 const {
     MD_Tournament,
     MD_Participant,    
-} = require('./Competition_base_classes');
+} = require('../src/Competition/MD_Competition_base_classes');
 
 const {
     RESULT_TEMPLATES,   
-} = require('./Options');
+} = require('../src/Competition/MD_Options');
 
 /*  ! ! ! This is not working example ! ! !
  -> it is needed to override "NotOverridenFunction" in base classes
@@ -27,7 +27,7 @@ let showroomTournament = new MD_Tournament(
 showroomTournament.addParticipant(new MD_Participant(5, "Eliška"));
 
 /* this function has to be overriden - draw of matches - see /JS/Core/MD_MatchGenerator */
-showroomTournament.draw = () => {};
+showroomTournament.draw();
 
 showroomTournament.arrangeMatches();
 

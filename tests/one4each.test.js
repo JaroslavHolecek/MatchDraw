@@ -1,4 +1,4 @@
-const { one4each } = require('../Core/MD_MatchGenerator');
+const { one4each } = require('../src/Core/MD_MatchGenerator');
 
 
 describe('one4each', () => {

@@ -1,0 +1,42 @@
+{
+  "name": "matchdraw",
+  
+  "version": "1.0.0",
+  
+  "description": "Package for draw matches on various type of tournament system",
+  
+  "main": "src/index.js",
+  
+  "scripts": {
+    "test": "npx jest --testPathPattern=\"tests/.*\""
+  },
+  
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JaroslavHolecek/MatchDraw.git"
+  },
+  
+  "keywords": [
+    "tournament",
+    "match",
+    "draw",
+    "round-robin",
+    "swiss",
+    "ko",
+    "competition"
+  ],
+  
+  "author": "Jaroslav Holeček ( holecek.jaroslav@email.cz )",
+  
+  "license": "GPL-3.0",
+  
+  "bugs": {
+    "url": "https://github.com/JaroslavHolecek/MatchDraw/issues"
+  },
+  
+  "homepage": "https://github.com/JaroslavHolecek/MatchDraw#readme",
+
+  "devDependencies": {
+    "jest": "^29.7.0"
+  }
+}

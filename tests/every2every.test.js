@@ -1,4 +1,4 @@
-const { every2every } = require('../Core/MD_MatchGenerator');
+const { every2every } = require('../src/Core/MD_MatchGenerator');
 
 
 describe('every2every', () => {

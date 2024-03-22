@@ -1,4 +1,4 @@
-const { combinations } = require('../Core/MD_Algorithms');
+const { combinations } = require('../src/Core/MD_Algorithms');
 
 describe('combinations', () => {
     test('should generate combinations of 3 elements from 5 total elements', () => {

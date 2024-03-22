@@ -1,11 +1,11 @@
 const {
     Participant_Radon,
     Tournament_Swiss_Radon,    
-} = require('./Competition/MD_Swiss_Radon');
+} = require('../src/Competition/MD_Swiss_Radon');
 
 const {
     showListOfObjects
-} = require('./Core/MD_Helpers');
+} = require('../src/Core/MD_Helpers');
 
 /* Prepare tournament */
 let showroomTournament = new Tournament_Swiss_Radon(

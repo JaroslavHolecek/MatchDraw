@@ -2,11 +2,11 @@ const {
     every2every,
     one4each,
     
-} = require('./Core/MD_MatchGenerator');
+} = require('../src/Core/MD_MatchGenerator');
 const {
     POLICY_EDMOND_WEIGHTS,
     weightsGenerator_Edmonds,
-} = require('./Core/MD_Helpers');
+} = require('../src/Core/MD_Helpers');
 
 function showDrawNumber(individuals, draw){
     console.log("Players:", individuals.join(", "));

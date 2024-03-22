@@ -1,4 +1,4 @@
-const { blossom } = require('../../Core/Retrieved/EdmondsBlossom.js');
+const { blossom } = require('../../src/Core/Retrieved/EdmondsBlossom.js');
 
 describe("Blossom", function () {
     test('should return an empty array if no array is given', function () {

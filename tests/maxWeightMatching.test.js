@@ -1,4 +1,4 @@
-const { maxWeightMatching } = require('../Core/MD_Algorithms');
+const { maxWeightMatching } = require('../src/Core/MD_Algorithms');
 
 describe('maxWeightMatching', () => {
     test('should return an empty array of edges for an empty graph', () => {
