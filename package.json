@@ -1,14 +1,15 @@
 {
   "name": "matchdraw",
   
-  "version": "1.0.0",
+  "version": "1.0.1",
   
   "description": "Package for draw matches on various type of tournament system",
   
   "main": "src/index.js",
   
   "scripts": {
-    "test": "npx jest --testPathPattern=\"tests/.*\""
+    "test": "npx jest --testPathPattern=\"tests/.*\"",
+    "build": "webpack --mode=production"
   },
   
   "repository": {
@@ -38,5 +39,9 @@
 
   "devDependencies": {
     "jest": "^29.7.0"
-  }
+  },
+
+  "files": [
+    "dist/bundle.js"
+  ]
 }

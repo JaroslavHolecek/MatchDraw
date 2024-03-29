@@ -3,6 +3,10 @@ JavaScript library for draw of matches on various type of competition.
 
 See showroom/[...].js how to use high-level functions.
 
+## Install
+`npm install matchdraw`
+`npm run build` for generate bundle file in dist directory if needed
+
 ## Supported type - actual
  - every2every : aka table or Round-robin https://en.wikipedia.org/wiki/Round-robin_tournament, every individal plays against each other
  - one4each : aka one round of Swiss https://en.wikipedia.org/wiki/Swiss-system_tournament, every individual has one oponent, based on weights between each double of individuals, into weights is possible encode various constraints like same club, distance in order etc... 
