@@ -1,6 +1,6 @@
-const Options = require('./Competition/MD_Options');
-const Swiss_Radon= require('./Competition/MD_Swiss_Radon');
+const {RESULT_TEMPLATES} = require('./Competition/MD_Options');
+const {Participant_Radon, Tournament_Swiss_Radon} = require('./Competition/MD_Swiss_Radon');
 
 console.log("See examples in showroom directory for usage example.");
 
-module.exports = {Options, Swiss_Radon};
+module.exports = { RESULT_TEMPLATES, Participant_Radon, Tournament_Swiss_Radon };
