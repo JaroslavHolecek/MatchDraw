@@ -5,7 +5,8 @@ See showroom/[...].js how to use high-level functions.
 
 ## Install
 `npm install matchdraw`
-`npm run build` for generate bundle file in dist directory if needed
+
+In html use `<script src="path/to/matchdraw/dist/bundle.js"></script>`
 
 ## Supported type - actual
  - every2every : aka table or Round-robin https://en.wikipedia.org/wiki/Round-robin_tournament, every individal plays against each other
