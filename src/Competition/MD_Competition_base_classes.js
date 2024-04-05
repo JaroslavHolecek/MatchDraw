@@ -22,6 +22,10 @@ class MD_Participant{
         };
     }
 
+    static fromJSON(json) {
+        return new MD_Participant(json.md_id, json.md_name);
+    }
+
     toString(){
         return `(${this.md_id}) ${this.md_name}`;
     }
@@ -53,6 +57,14 @@ class MD_Match{
             participants_md_ids: this.participants.map(participant => participant.md_id),
             score: this.score,
         };
+    }
+
+    static fromJSON(json, participants_array) {
+        return new MD_Match(
+            json.md_id,
+            json.participants_md_ids.map((prtcpnt_id) => participants_array.find((prtcpnt) => prtcpnt.md_id === prtcpnt_id)),
+            json.score
+        );
     }
 
     toString(){
@@ -87,6 +99,20 @@ class MD_Result{
         this.result = result;
     }
 
+    toJSON(){
+        return {
+            participant_id: this.participant.md_id,
+            result: this.result
+        };
+    }
+
+    static fromJSON(json, participants_array) {
+        return new MD_Result(
+            participants_array.find((prtcpnt) => prtcpnt.md_id === json.participant_id),
+            json.result
+        );
+    }
+
     onlyResultToString() {
         let result_str = '';
         for (let key in this.result) {
@@ -119,6 +145,40 @@ class MD_Tournament{
         if(participants.length > 0) {this.initAllParticipants(participants);}
     }
 
+    toJSON(){
+        return {
+            tmp_participants: this.results.map(rslt => rslt.participant.toJSON()), /* will not be restored, but use inside results and matches */
+
+            md_id: this.md_id,
+            name: this.name,
+            matches: this.matches.map(mtch => mtch.toJSON()),
+            results: this.results.map(rslt => rslt.toJSON()),
+            result_template: this.result_template,
+            sortResultsFce: this.sortResultsFce
+        };
+    }
+
+    /**
+     * 
+     * @param {*} json 
+     * @param {*} inner_types {participant: ..., result: ..., match: ...}
+     * @returns 
+     */
+    static fromJSON(json, inner_types) {
+        let prtcpnts = json.tmp_participants.map(tmp_p => inner_types.participant.fromJSON(tmp_p));
+        let trnmnt = new MD_Tournament(
+            json.md_id,
+            json.name,
+            json.result_template,
+            json.sortResultsFce,
+            []
+        );
+        trnmnt.results = json.results.map(rslt => inner_types.result.fromJSON(rslt, prtcpnts));
+        trnmnt.matches = json.matches.map(mtch => inner_types.match.fromJSON(mtch, prtcpnts));
+
+        return trnmnt; 
+    }
+
     /* ***************************** */
     /* *** TO OVERRIDE FUNCTIONS *** */
     /* ***************************** */
@@ -146,6 +206,7 @@ class MD_Tournament{
     /* Of course, you can override whatever you want...
         above functions HAVE TO be overriden -> filled
      */
+
     
     arrangeMatches(){
         console.log("In base-class function arrangeMatches() are matches left in same order they were added.");

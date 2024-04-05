@@ -77,7 +77,7 @@ function selectOneDimFromListByIds(list, ids){
 
 function selectTwoDimFromListByIds(list, ids){
     let outter = ids.length;
-    let inner = ids[0].length
+    let inner = outter > 0 ? ids[0].length : 0;
     let list_length = list.length;
     let selected = ArrayTwodim(outter, inner);
     for (let j = 0; j < inner; j++) {

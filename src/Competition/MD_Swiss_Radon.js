@@ -24,22 +24,31 @@ class Participant_Radon extends MD_Participant{
         this.club = club;
         this.birth_year = birth_year;
         this.tmp_id; /* temporary id - helper for draw / generating weights */
-        this.number_of_played_matches = 0;
     }
 
     toJSON(){
         let json = super.toJSON();
+        json.club = this.club;
         json.birth_year = this.birth_year;
+
         return json;
     }
 
-    toString(){
-        return `${super.toString()}\t${this.birth_year}\t${this.club}`;
+    static fromJSON(json) {
+        return new Participant_Radon(
+            json.md_id,
+            json.md_name,
+            json.club,
+            json.birth_year);
     }
 
-    toString_full(){
-        return `${this.birth_year}, ${this.club}, ${super.toString()}`;
+    toString(){
+        return `${super.toString()} ${this.birth_year} ${this.club}`;
     }
+
+    // toString_full(){
+    //     return `${this.birth_year}, ${this.club}, ${super.toString()}`;
+    // }
 }
 
 class Tournament_Swiss_Radon extends MD_Tournament{
@@ -51,6 +60,31 @@ class Tournament_Swiss_Radon extends MD_Tournament{
         this.date = date;
         this.in_year_number = in_year_number;
         this.number_of_played_round = 0;
+    }
+
+    toJSON(){
+        let trnmnt = super.toJSON();
+        trnmnt.date = this.date;
+        trnmnt.in_year_number = this.in_year_number;
+        trnmnt.number_of_played_round = this.number_of_played_round;
+        return trnmnt;
+    }
+
+    /* some better approach than in-fact create 3 objects for 1 result? */
+    static fromJSON(json) {
+        let superObj = super.fromJSON(json, {participant: Participant_Radon, result: MD_Result, match: MD_Match});
+        let trnmnt = new Tournament_Swiss_Radon(
+            json.md_id,
+            json.name,
+            new Date(json.date),
+            json.in_year_number,
+            []
+        );
+        trnmnt.results = superObj.results;
+        trnmnt.matches = superObj.matches;
+        trnmnt.number_of_played_round = json.number_of_played_round;
+
+        return trnmnt; 
     }
 
     count_matchToResult(match){
@@ -170,6 +204,7 @@ class Tournament_Swiss_Radon extends MD_Tournament{
             participants_to_draw = this.results.map(r => r.participant); /* all participants */
             weights = this.generate_weights(must_play_participants, prefer_different_club);
         }
+
 
         let {matches, singletons} = one4each(participants_to_draw, weights);
                      

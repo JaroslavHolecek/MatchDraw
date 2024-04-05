@@ -26,7 +26,7 @@ let showroomTournament = new MD_Tournament(
 );
 showroomTournament.addParticipant(new MD_Participant(5, "Eliška"));
 
-/* this function has to be overriden - draw of matches - see /JS/Core/MD_MatchGenerator */
+/* this function has to be overriden - draw of matches - see /src/Core/MD_MatchGenerator */
 showroomTournament.draw();
 
 showroomTournament.arrangeMatches();

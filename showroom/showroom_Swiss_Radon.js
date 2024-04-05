@@ -158,3 +158,89 @@ showroomTournament.add_matchToResults(match);
 /* Sort and show result of tournament */
 showroomTournament.sortResults();
 showroomTournament.showCountedOrder();
+
+console.log("====== RESTORED FROM JSON =======");
+overall_singletons = [];
+
+let trnmntJSON = JSON.stringify(showroomTournament);
+console.log(trnmntJSON);
+
+let restoredTrnmnt = Tournament_Swiss_Radon.fromJSON(JSON.parse(trnmntJSON));
+// console.log(restoredTrnmnt)
+
+/* Draw fifth round */
+({draw_singletons, draw_matches } = restoredTrnmnt.draw(overall_singletons, true));
+restoredTrnmnt.arrangeMatches();
+overall_singletons.push(...draw_singletons);
+
+/* Show fifth round */
+restoredTrnmnt.showCountedOrder();
+showListOfObjects("Participants without match:", draw_singletons);
+showListOfObjects("Matches:", draw_matches);
+
+/* Fill score of fifth round matches */
+match = restoredTrnmnt.getNextUnplayedMatch();
+match.score = [[15,5], [6,15]];
+restoredTrnmnt.add_matchToResults(match);
+
+match = restoredTrnmnt.getNextUnplayedMatch();
+match.score = [[7,15], [8,15]];
+restoredTrnmnt.add_matchToResults(match);
+
+match = restoredTrnmnt.getNextUnplayedMatch();
+match.score = [[15,9], [10,15]];
+restoredTrnmnt.add_matchToResults(match);
+
+match = restoredTrnmnt.getNextUnplayedMatch();
+match.score = [[11,15], [12,15]];
+restoredTrnmnt.add_matchToResults(match);
+
+/* Draw sixth round */
+({draw_singletons, draw_matches } = restoredTrnmnt.draw(overall_singletons, true));
+restoredTrnmnt.arrangeMatches();
+overall_singletons.push(...draw_singletons);
+
+/* Show sixth round */
+restoredTrnmnt.showCountedOrder();
+showListOfObjects("Participants without match:", draw_singletons);
+showListOfObjects("Matches:", draw_matches);
+
+/* Fill score of sixth round matches */
+match = restoredTrnmnt.getNextUnplayedMatch();
+match.score = [[15,5], [6,15]];
+restoredTrnmnt.add_matchToResults(match);
+
+match = restoredTrnmnt.getNextUnplayedMatch();
+match.score = [[7,15], [8,15]];
+restoredTrnmnt.add_matchToResults(match);
+
+match = restoredTrnmnt.getNextUnplayedMatch();
+match.score = [[15,9], [10,15]];
+restoredTrnmnt.add_matchToResults(match);
+
+match = restoredTrnmnt.getNextUnplayedMatch();
+match.score = [[11,15], [12,15]];
+restoredTrnmnt.add_matchToResults(match);
+
+/* Draw restored compensatory round */
+({draw_singletons, draw_matches } = restoredTrnmnt.draw_compensatory(overall_singletons));
+restoredTrnmnt.arrangeMatches();
+
+/* Show restored compensatory round */
+restoredTrnmnt.showCountedOrder();
+showListOfObjects("Participants without match:", draw_singletons);
+showListOfObjects("Matches:", draw_matches);
+
+/* Fill score of restored compensatory round matches */
+match = restoredTrnmnt.getNextUnplayedMatch();
+if(match){
+    match.score = [[1,15], [1,15]];
+    restoredTrnmnt.add_matchToResults(match);
+}
+
+
+/* Sort and show result of restored tournament */
+restoredTrnmnt.sortResults();
+restoredTrnmnt.showCountedOrder();
+
+

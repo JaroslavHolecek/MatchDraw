@@ -48,3 +48,5 @@ let showroomTournament = new Tournament_Swiss_Radon(
 let {draw_singletons, draw_matches } = showroomTournament.draw();
 showListOfObjects("Participants without match:", draw_singletons);
 showListOfObjects("Matches:", draw_matches);
+
+console.log(JSON.stringify(showroomTournament));

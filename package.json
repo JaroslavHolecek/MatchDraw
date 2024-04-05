@@ -5,7 +5,8 @@
   "main": "src/index.js",
   "scripts": {
     "test": "npx jest --testPathPattern=\"tests/.*\"",
-    "make-bundle": "browserify src/index.js --s MatchDraw > dist/bundle.js"
+    "make-bundle": "browserify src/index.js --s MatchDraw > dist/bundle.js",
+    "debug-Swiss_Radon": "node showroom/showroom_Swiss_Radon.js" 
   },
   "repository": {
     "type": "git",
