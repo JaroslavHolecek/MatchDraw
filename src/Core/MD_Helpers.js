@@ -33,6 +33,7 @@ const POLICY_EDMOND_WEIGHTS = {
 */
 function weightsGenerator_Edmonds(num_individuals, policy){
     let edges = [];
+    if (num_individuals <= 0){return edges;}
 
     switch (policy) {
         case POLICY_EDMOND_WEIGHTS.E2E_EQUAL:
@@ -57,7 +58,6 @@ function weightsGenerator_Edmonds(num_individuals, policy){
           throw new NotSupportedAttributeValue("policy", policy, "use policy from POLICY_EDMOND_WEIGHTS")
     }
     return edges;
-
 }
 
 function selectOneDimFromListByIds(list, ids){
