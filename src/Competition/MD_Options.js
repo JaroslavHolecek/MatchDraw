@@ -1,4 +1,3 @@
-
 /**
  * template is template (like init) of result of participant - intended over whole turnament
  * sort_functions is rule how to compare two results in form of template. Will be used in sort() function
