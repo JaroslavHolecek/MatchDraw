@@ -129,6 +129,10 @@ function showListOfObjects(message="", obj_list=[]){
     });
 }
 
+function sumArray(array){
+    return array.reduce((partialSum, a) => partialSum + a, 0);
+}
+
 module.exports = {
     ArrayTwodim,
     SetRange,
@@ -138,4 +142,5 @@ module.exports = {
     selectTwoDimFromListByIds,
     indexesOfMaxInArray,
     showListOfObjects,
+    sumArray,
 };
