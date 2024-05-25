@@ -1,6 +1,5 @@
 const {
     Participant_Radon,
-    Match_Radon,
     Tournament_Swiss_Radon,    
 } = require('../src/Competition_Custom/Swiss_Radon');
 

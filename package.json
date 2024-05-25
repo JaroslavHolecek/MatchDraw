@@ -1,6 +1,6 @@
 {
   "name": "matchdraw",
-  "version": "1.0.5",
+  "version": "2.0.0",
   "description": "Package for draw matches on various type of tournament system",
   "main": "src/index.js",
   "scripts": {
