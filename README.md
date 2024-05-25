@@ -19,6 +19,9 @@ This is core package used in my other project BadTournament to do this monotone 
 Usage is free as a lot of active people have not enough money or time for licencing "nonsense".
 If you have enough money and this tool was useful for you - it would make me happy if you make some contribution (see below).
 
+## Code philosophy
+Code is build mainly as Composition over Inheritence.
+
 ## Contribution
 You can contribute to project and/or make author happy via
 

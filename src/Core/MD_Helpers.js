@@ -1,5 +1,4 @@
-const { combinations } = require('./MD_Algorithms');
-const { NotSupportedAttributeValue, NotMatchArguments } = require('./MD_Errors');
+const { NotMatchArguments } = require('./MD_Errors');
 
 /**
  * Generate two-dimensional array 
@@ -19,46 +18,7 @@ function SetRange(max){
     return all;
 }
 
-const POLICY_EDMOND_WEIGHTS = {
-    E2E_EQUAL: 0, /* Every to every, each edge has same weights === 1 */
-    E2E_SORTED_LINEAR: 1, /* Every to every, weight is linear inverse of distance between indexes (max_distance - distance + 1) */
-    E2E_SORTED_FRACTIONAL_LINEAR: 2, /* Every to every, weight is linear fraction of distance between indexes (1 / distance) */
-  };
 
-/**
- * Simple generator of weights/edges for one4each() function. Probably you will change some of values by your intention after usage of this function
- * @param {Int} num_individuals number of individuals (number of indexes for wich will be weights generated) 
- * @param {POLICY_EDMOND_WEIGHTS} policy policy for generating weights, see POLICY_EDMOND_WEIGHTS for description
- * @returns Array[NumberArray[3]] Array of edges in format [node_from, node_to, weight], node_from and node_to are indexes (starting from 0) of nodes, weight is wight of edge between this nodes
-*/
-function weightsGenerator_Edmonds(num_individuals, policy){
-    let edges = [];
-    if (num_individuals <= 0){return edges;}
-
-    switch (policy) {
-        case POLICY_EDMOND_WEIGHTS.E2E_EQUAL:
-            let comb_equal = combinations(num_individuals, 2);
-            comb_equal.forEach(nodes => {
-                edges.push([...nodes, 1]);
-            });
-            break;
-        case POLICY_EDMOND_WEIGHTS.E2E_SORTED_LINEAR:
-            let comb_sl = combinations(num_individuals, 2);
-            comb_sl.forEach(nodes => {
-                edges.push([...nodes, num_individuals - Math.abs(nodes[1] - nodes[0])]);
-            });
-            break;
-        case POLICY_EDMOND_WEIGHTS.E2E_SORTED_FRACTIONAL_LINEAR:
-            let comb_fl = combinations(num_individuals, 2);
-            comb_fl.forEach(nodes => {
-                edges.push([...nodes, 1/Math.abs(nodes[1] - nodes[0])]);
-            });
-            break;
-        default:
-          throw new NotSupportedAttributeValue("policy", policy, "use policy from POLICY_EDMOND_WEIGHTS")
-    }
-    return edges;
-}
 
 function selectOneDimFromListByIds(list, ids){
     let outter = ids.length;
@@ -122,10 +82,18 @@ function indexesOfMaxInArray(array){
     return indexes;
 }
 
+function maxOfArray(array){
+    return array.reduce((a, b) => Math.max(a, b), -Infinity);
+}
+
+function minOfArray(array){
+    return array.reduce((a, b) => Math.min(a, b), Infinity);
+}
+
 function showListOfObjects(message="", obj_list=[]){
     console.log(message)
     obj_list.forEach(obj => {
-        console.log(`\t${obj}`);
+        console.log(`\t${obj.toString()}`);
     });
 }
 
@@ -133,14 +101,55 @@ function sumArray(array){
     return array.reduce((partialSum, a) => partialSum + a, 0);
 }
 
+function appendToArray(to, from){
+    if (to.length != from.length){
+        throw NotMatchArguments("to.length", to.length, "from.length", from.length);
+    }
+    for (let index = 0; index < from.length; index++) {
+        to[index] += from[index];        
+    }
+}
+
+/**
+ * 
+ * @param {Array[Array]} arrays 2D array of sumable primitives 
+ * @returns {Array} Element-wise sum
+ */
+function sumAllArrays(arrays){
+    if (arrays.length < 1){
+        return [];
+    }
+    let res = Array(arrays[0].length).fill(0);
+    arrays.forEach(arr => appendToArray(res, arr)); 
+    return res;
+}
+
+function markMaxAndOtherInArray(array, arg_obj={max_mark:1, other_mark:-1}){
+    let max_indexes = indexesOfMaxInArray(array);
+    let res = Array(array.length).fill(arg_obj.other_mark);
+    max_indexes.forEach(idx => res[idx] = arg_obj.max_mark);
+    return res;
+}
+
+function shortStringDate(date){
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0'); // Month is zero-based, so add 1
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
 module.exports = {
     ArrayTwodim,
     SetRange,
-    POLICY_EDMOND_WEIGHTS,
-    weightsGenerator_Edmonds,
     selectOneDimFromListByIds,
     selectTwoDimFromListByIds,
     indexesOfMaxInArray,
+    maxOfArray,
+    minOfArray,
     showListOfObjects,
     sumArray,
+    appendToArray,
+    sumAllArrays,
+    markMaxAndOtherInArray,
+    shortStringDate
 };
