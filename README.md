@@ -30,8 +30,8 @@ You can contribute to project and/or make author happy via
  * invite me ( holecek.jaroslav@email.cz ) to your tournament - I like to play everything or just meet new people :-)
  * send some money via
     - paypal: https://paypal.me/JaroslavHolecek
-    - bank (czk): 2200378568 / 2010  VS: 03170022
-    - <img src="misc/QRPlatba_na_ucet_2001870082.png" width="200px" alt="Bank account (CZK): 2200378568 / 2010  VS: 03170022"/>
+    - bank (czk): 2302921023 / 2010  SS: 68826587
+    - <img src="misc/QRPlatba_MatchDraw.png" width="200px" alt="Bank account (CZK): 2302921023 / 2010  SS: 68826587"/>
 
 
 
