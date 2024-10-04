@@ -18,23 +18,18 @@ class MD_Result_GivenGet extends MD_MasterClass {
     constructor(gg={given:0, get:0}){
         super(gg);
     }
+    set given(given){this.md_data.given = given;}
+    get given(){return this.md_data.given;}
+    set get(get){this.md_data.get = get;}
+    get get(){return this.md_data.get;}
+    
     reset(gg={given:0, get:0}){
         this.given = gg.given;
         this.get = gg.get;
     }
-    set given(points){this.md_data.given = points;}
-    get given(){return this.md_data.given;}
-    set get(points){this.md_data.get = points;}
-    get get(){return this.md_data.get;}
 
     toString(){
         return `${this.constructor.md_name}: +${this.given}\u00A0-${this.get}\u00A0(${this.given-this.get})`;
-    }
-    toJSON(){
-        return {
-            given: this.given,
-            get: this.get
-        }
     }
 
     static sum(r1, r2){
@@ -106,7 +101,7 @@ class MD_Result_Sets_Points extends MD_MasterClass {
     static innerClassSets = MD_Result_Sets;
 
     /* #data = {points:innerClassPoints, sets:innerClassSets} */
-    static data_check(data){
+    static data_check(data, check_recursively=false){
         if(!('points' in data)){
             throw new IncorrectValues(this.md_name, "points has to be set");
         }
@@ -114,8 +109,10 @@ class MD_Result_Sets_Points extends MD_MasterClass {
             throw new IncorrectValues(this.md_name, "sets has to be set");
         }
 
-        this.innerClassPoints.data_check(data.points);
-        this.innerClassSets.data_check(data.sets);
+        if(check_recursively){
+            this.innerClassPoints.data_check(data.points);
+            this.innerClassSets.data_check(data.sets);
+        }
     }
 
     constructor(gg={points:{given:0, get:0}, sets:{given:0,get:0}}){
@@ -128,19 +125,13 @@ class MD_Result_Sets_Points extends MD_MasterClass {
         this.sets.reset(gg.sets);
     }
     /* you can also (preferably) change values of for example points like this: result.points.give = 3 */
-    get points(){return this.md_data.points;}
     set points(points){this.md_data.points = new this.constructor.innerClassPoints(points);}
-    get sets(){return this.md_data.sets;}
+    get points(){return this.md_data.points;}
     set sets(sets){this.md_data.sets = new this.constructor.innerClassSets(sets);}
+    get sets(){return this.md_data.sets;}
 
     toString(){
         return `${this.sets.toString()} ${this.points.toString()}`;
-    }
-    toJSON(){
-        return {
-            points: this.points.toJSON(),
-            sets: this.sets.toJSON()
-        };
     }
 
     static sum(r1, r2){
@@ -176,8 +167,62 @@ class MD_Result_Sets_Points extends MD_MasterClass {
     }
 }
 
+class MD_Result_OneValue extends MD_MasterClass {
+    static md_description = "One value";
+    static md_name = "OneValue";
+
+    /* #data {value:_} */
+    static data_check(data){
+        if(!('value' in data)){
+            throw new IncorrectValues(this.md_name, "value has to be set");
+        }
+    }
+
+    constructor(gg={value:0}){
+        super(gg);
+    }
+    set value(val){this.md_data.value = val;}
+    get value(){return this.md_data.value;}
+
+    reset(gg={value:0}){
+        this.value = gg.value;
+    }
+
+    toString(){
+        return `${this.constructor.md_name}: ${this.value}`;
+    }
+
+    static sum(r1, r2){
+        return new this.constructor(
+            {
+                value: r1.value + r2.value
+            }
+        );
+    }
+
+    add(other){
+        this.value += other.value;
+    }
+
+    /**
+     * compareFn for Array.prototype.sort
+     */
+    static sort_functions = {
+        /**
+         * r1 before r2 if r1 value is greater than r2 value
+         * @param {MD_Result_OneValue} r1 
+         * @param {MD_Result_OneValue} r2 
+         * @returns difference of values
+         */
+        DECS(r1, r2){
+            return r2.value - r1.value;
+        }
+    }
+}
+
 module.exports = { 
     MD_Result_Points, 
     MD_Result_Sets, 
-    MD_Result_Sets_Points 
+    MD_Result_Sets_Points,
+    MD_Result_OneValue,
 };

@@ -5,8 +5,8 @@ class MD_MasterClass{
     static md_name = "MasterClass";
 
     #md_data;
-    static data_check(data){
-        /* throw Errro if data are not correct */
+    static data_check(data, check_recursively=false){
+        /* throw Error if data are not correct */
     }
     
     constructor(gg={}){
@@ -18,7 +18,27 @@ class MD_MasterClass{
         }
 
         //this.md_data = structuredClone(gg);
-        this.md_data = gg;
+        this.md_data = gg; // see setter of md_data
+    
+        // /* you need not write trivial getter and setter for every property,
+        //  but just for those, where something interisting will happen */
+        // return new Proxy(this, {
+        //     get: (target, prop) => {
+        //         if (prop in target) {
+        //             return target[prop];
+        //         } else {
+        //             return target.#md_data[prop];
+        //         }
+        //     },
+        //     set: (target, prop, value) => {
+        //         if (prop in target) {
+        //             target[prop] = value;
+        //         } else {
+        //             target.#md_data[prop] = value;
+        //         }
+        //         return true;
+        //     }
+        // });
     }
 
     copy(){
@@ -35,12 +55,18 @@ class MD_MasterClass{
         }
     };
 
-    static preprocesJSON(parsedJSON, ...args){
-        return parsedJSON;
+    static fromJSON(json, support){
+        return this.fromObject(json, support);
     }
 
-    static fromJSON(parsedJSON, ...args){
-        return new this(this.preprocesJSON(parsedJSON, ...args));
+    /* override this functions in extending class */
+    static fromObject(obj, support){
+        this.data_check(obj, false);
+        return new this(obj);
+    }
+
+    toJSON(){
+        return this.md_data;
     }
 
     // static fillInFrom(to, from){

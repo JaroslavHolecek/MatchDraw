@@ -18,8 +18,12 @@ class MD_Score_Simple extends MD_MasterClass {
 
     /* #md_data = {md_values:Array} */
     static data_check(data){
+
+        if(!('md_values' in data)){
+            throw new IncorrectValues(this.md_name, "md_values has to be set");
+        }
         if(!Array.isArray(data.md_values)){
-            throw new IncorrectValues(this.md_name, "Values has to be Array");
+            throw new IncorrectValues(this.md_name, "md_values has to be Array");
         }
     }
 
@@ -27,9 +31,9 @@ class MD_Score_Simple extends MD_MasterClass {
      * 
      * @param {{md_values:Array}}} gg
      */
-    constructor(gg={md_values:[]}){
-        super(gg);
-    }
+    // constructor(gg={md_values:[]}){
+    //     super(gg);
+    // }
 
     /**
      * @param {any[]} md_values
@@ -44,12 +48,6 @@ class MD_Score_Simple extends MD_MasterClass {
 
     toString(){
         return `${this.constructor.md_name}: ${this.isEmpty() ? "_____" : this.md_values.join(" x ")}`;
-    }
-
-    toJSON(){
-        return {
-            md_values: this.md_values
-        }
     }
 
     /**
@@ -80,8 +78,11 @@ class MD_Score_Composite extends MD_MasterClass{
     /* #md_data;  {md_values:Array<innerClass_Score>} */
 
     static data_check(data, check_inner=false){
+        if(!('md_values' in data)){
+            throw new IncorrectValues(this.md_name, "md_values has to be set");
+        }
         if(!Array.isArray(data.md_values)){
-            throw new IncorrectValues(this.md_name, "Values has to be Array");
+            throw new IncorrectValues(this.md_name, "md_values has to be Array");
         }
 
         if(check_inner){
@@ -97,6 +98,7 @@ class MD_Score_Composite extends MD_MasterClass{
      */
     constructor(gg={md_values:[]}){
         super(gg);
+        this.md_values = gg.md_values; /* trigger setter */
     }
     
     set md_values(values_es){
@@ -135,6 +137,16 @@ class MD_Score_Composite extends MD_MasterClass{
             md_values: this.md_values.map(vls => vls.toJSON())
         }
     }
+
+    static fromObject(obj, support){
+        this.data_check(obj, true);
+        let gg = {md_values: []};
+        obj.md_values.forEach(inner => {
+            gg.md_values.push(this.innerClass_Score.fromObject(inner, support));
+        });
+        return new this(gg);
+    }
+
 
     /**
      * Function that recursively resolve inner score objects using provided functions and its arguments

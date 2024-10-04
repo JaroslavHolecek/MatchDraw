@@ -20,6 +20,9 @@ const {
 const { 
     every2every
 } = require('../Core/MD_MatchGenerator');
+const {
+    maxOfPropertyOfArray
+} = require('../Core/MD_Helpers');
 
 /**
  * Object used as parameter to draw() function.
@@ -36,43 +39,50 @@ const {
 class MD_ParticipantResult extends MD_MasterClass {
     static md_description = "Hold connection between participant and its result."
     static md_name = "Participant's result";
-    static innerClassParticipant = MD_Participant;
+    // change these in your extending class
     static innerClassResult = MD_Result_Points;
 
-    /* #data={md_participant:innerClassParticipant, md_result:innerClassResult} */
-    static data_check(data, check_inner=false){
-        if(!('md_participant' in data)){
-            throw new IncorrectValues(this.md_name, "md_participant has to be set");
+    /* data={participant:MD_Participant, result:innerClassResult} */
+    static data_check(data, check_recursively=false){
+        if(!('participant' in data)){
+            throw new IncorrectValues(this.md_name, "participant has to be set");
         }
-        if(!('md_result' in data)){
-            throw new IncorrectValues(this.md_name, "md_result has to be set");
+        if(!('result' in data)){
+            throw new IncorrectValues(this.md_name, "result has to be set");
         }
 
-        if(check_inner){
-            this.innerClassParticipant.data_check(data.md_participant);
-            this.innerClassResult.data_check(data.md_result);
+        if(check_recursively){
+            this.innerClassResult.data_check(data.result, check_recursively);
         }
 
     }
 
-    constructor(gg/*={md_participant:innerClassParticipant, md_result:innerClassResult}*/){
+    // gg = {participant:MD_Participant, result:innerClassResult}
+    constructor(gg){
         super(gg);
-        this.md_participant = gg.md_participant;        
-        this.md_result = gg.md_result        
+        this.participant = gg.participant;        
+        this.result = gg.result        
     }
-    get md_participant(){return this.md_data.md_participant;}
-    set md_participant(participant){this.md_data.md_participant = new this.constructor.innerClassParticipant(participant);}
-    get md_result(){return this.md_data.md_result;}
-    set md_result(result){this.md_data.md_result = new this.constructor.innerClassResult(result);}
+
+    set result(result){this.md_data.result = new this.constructor.innerClassResult(result);}
+    get result(){return this.md_data.result;}
 
     toString(){
-        return `${this.md_participant.toString()}\n\t${this.md_result.toString()}`;
+        return `${this.participant.toString()}\n\t${this.result.toString()}`;
+    }
+
+    // static fromJSON(json, participantsList)
+    static fromObject(obj, support){
+        return new this({
+            participant: support.participants_array.find(p => p.id === obj.participant_id),
+            result: this.innerClassResult.fromObject(obj.result, support)
+        });
     }
 
     toJSON(){
         return {
-            md_participant: this.md_participant.toJSON(),
-            md_result: this.md_result.toJSON()
+            participant_id: this.participant.id,
+            result: this.result.toJSON()
         };
     }
 
@@ -94,97 +104,101 @@ class MD_ParticipantResult extends MD_MasterClass {
  * Extend class for adding another info like place, date etc.
  */
 class MD_Competition extends MD_MasterClass {
+    // change these in your extending class
     static md_description = "Basic class for competition. Consist of id, name, participants with its results and matches.";
     static md_name = "Basic competition";
+    static innerClassParticipant = MD_Participant;
     static innerClassParticipantResult = MD_ParticipantResult;
     static innerClassMatch = MD_Match;
     static defaultSortResultFce = MD_Result_Points.sort_functions.DIFF
 
-    /* #data={md_id:Number, md_name:String, md_participants_results:Array<innerClassParticipantResult>, md_matches:Array<innerClassMatch>} */
-    static data_check(data){
-        if(!('md_id' in data)){
-            throw new IncorrectValues(this.md_name, "md_id has to be set");
+    /* data={id:Number, name:String, participants:Array<innerClassParticipant>, participants_results:Array<innerClassParticipantResult>, matches:Array<innerClassMatch>} */
+    static data_check(data, check_recursively=false){
+        if(!('id' in data)){
+            throw new IncorrectValues(this.md_name, "id has to be set");
         }
-        if(!('md_name' in data)){
-            throw new IncorrectValues(this.md_name, "md_name has to be set");
+        if(!('name' in data)){
+            throw new IncorrectValues(this.md_name, "name has to be set");
         }
-        if(!('md_participants_results' in data)){
-            throw new IncorrectValues(this.md_name, "md_participants_results has to be set");
+        if(!('participants' in data)){
+            throw new IncorrectValues(this.md_name, "participants has to be set");
         }
-        if(!Array.isArray(data.md_participants_results)){
-            throw new IncorrectValues(this.md_name, "md_participants_results has to be Array");
+        if(!('participants_results' in data)){
+            throw new IncorrectValues(this.md_name, "participants_results has to be set");
         }
-        if(!('md_matches' in data)){
-            throw new IncorrectValues(this.md_name, "md_matches has to be set");
-        }
-        if(!Array.isArray(data.md_matches)){
-            throw new IncorrectValues(this.md_name, "md_matches has to be Array");
-        }
-
-        data.md_participants_results.forEach(prtcpnt_rslt => {
-            this.innerClassParticipantResult.data_check(prtcpnt_rslt);
-        });
-
-        data.md_matches.forEach(mtch => {
-            this.innerClassMatch.data_check(mtch);
-        });
-    }
-
-    constructor(gg/*={md_id:Number, md_name"String}*/){
-        gg.md_participants_results = gg.md_participants_results || [];
-        gg.md_matches = gg.md_matches || [];
-        super(gg);
-        this.md_participants_results = gg.md_participants_results; /* trigger setter */
-        this.md_matches = gg.md_matches; /* trigger setter */
-    }
-    set md_id(id){this.md_data.md_id = id;}
-    get md_id(){return this.md_data.md_id;}
-    set md_name(name){this.md_data.md_name = name;}
-    get md_name(){return this.md_data.md_name;}
-    get md_participants_results(){return this.md_data.md_participants_results;}
-    set md_participants_results(participants_results){
-        if(!Array.isArray(participants_results)){
+        if(!Array.isArray(data.participants_results)){
             throw new IncorrectValues(this.md_name, "participants_results has to be Array");
         }
-        this.md_data.md_participants_results = participants_results.map(prtcpnt_rslt => {return new this.constructor.innerClassParticipantResult(prtcpnt_rslt)});
-    }
-    get md_matches(){return this.md_data.md_matches;}
-    set md_matches(matches){
-        if(!Array.isArray(matches)){
-            throw new IncorrectValues(this.md_name, "md_matches has to be Array");
+        if(!('matches' in data)){
+            throw new IncorrectValues(this.md_name, "matches has to be set");
         }
-        this.md_data.md_matches = matches.map(mtch => {return new this.constructor.innerClassMatch(mtch)});
+        if(!Array.isArray(data.matches)){
+            throw new IncorrectValues(this.md_name, "matches has to be Array");
+        }
+
+        if(check_recursively){
+            data.participants.forEach(prtcpnt => {
+                this.innerClassParticipant.data_check(prtcpnt, check_recursively);
+            });
+
+            data.participants_results.forEach(prtcpnt_rslt => {
+                this.innerClassParticipantResult.data_check(prtcpnt_rslt, check_recursively);
+            });
+
+            data.matches.forEach(mtch => {
+                this.innerClassMatch.data_check(mtch, check_recursively);
+            });
+        }
+    }
+
+    constructor(gg/*={id:Number, name"String}*/){
+        gg.participants = gg.participants || [];
+        gg.participants_results = gg.participants_results || [];
+        gg.matches = gg.matches || [];
+        super(gg);
+    }
+
+    get id(){return this.md_data.id;}
+    set id(id){this.md_data.id = id;}
+    get name(){return this.md_data.name;}
+    set name(name){this.md_data.name = name;}
+    get participants(){return this.md_data.participants;}
+
+    set participants(participants){
+        this.md_data.participants = participants.map(participant => new this.constructor.innerClassParticipant(participant));
+    }
+
+    get participants_results(){return this.md_data.participants_results;}
+    set participants_results(participants_results){
+        this.md_data.participants_results = participants_results.map(participant_result => new this.constructor.innerClassParticipantResult(participant_result));
+    }
+
+    get matches(){return this.md_data.matches;}
+    set matches(matches){
+        this.md_data.matches = matches.map(match => new this.constructor.innerClassMatch(match));
     }
 
     toJSON(){
         return {
-            md_id: this.md_id,
-            md_name: this.md_name,
-            md_participants_results: this.md_participants_results.map(prt_rslt => prt_rslt.toJSON()),             
-            md_matches: this.md_matches.map(mtch => mtch.toJSON()),
+            id: this.id,
+            name: this.name,
+            participants: this.participants.map(prtcpnt => prtcpnt.toJSON()),
+            participants_results: this.participants_results.map(prt_rslt => prt_rslt.toJSON()),             
+            matches: this.matches.map(mtch => mtch.toJSON()),
         };
     }
 
-    static preprocesJSON(parsedJSON){
-        let participants_results = [];
-        let matches = [];
-
-        parsedJSON.md_participants_results.forEach(inner => {
-            participants_results.push(this.innerClassParticipantResult.fromJSON(inner));
+    static fromObject(obj, support={}){
+        support.participants_array = obj.participants.map(prtcpnt => this.innerClassParticipant.fromObject(prtcpnt, support));
+        return new this({
+            id: obj.id,
+            name: obj.name,
+            participants: support.participants_array,
+            participants_results: obj.participants_results.map(prt_rslt => this.innerClassParticipantResult.fromObject(prt_rslt, support)),
+            matches: obj.matches.map(mtch => this.innerClassMatch.fromObject(mtch, support))
         });
-
-        let participants = participants_results.map(prt_res => prt_res.md_participant);
-        parsedJSON.md_matches.forEach(match => {
-            matches.push(this.innerClassMatch.fromJSON(match, participants));
-        });
-
-        return {
-            md_id: parsedJSON.md_id,
-            md_name: parsedJSON.md_name,
-            md_participants_results: participants_results,
-            md_matches: matches
-        };
     }
+
 
     /* ***************************** */
     /* *** TO OVERRIDE FUNCTIONS *** */
@@ -212,14 +226,14 @@ class MD_Competition extends MD_MasterClass {
     draw_inner(arg_obj){
         let {matches, singletons} = every2every(this.get_participants());
         let draw_matches = [];
-        let first_id = this.md_matches.length+1;
+        let first_id = maxOfPropertyOfArray(this.matches, "id") + 1;
         matches.forEach((mtch, index) => {
             draw_matches.push(new this.constructor.innerClassMatch({
-                md_id: first_id + index,
-                md_participants: mtch
+                id: first_id + index,
+                participants: mtch
             }))            
         });
-        this.md_matches.push(...draw_matches);
+        this.matches.push(...draw_matches);
         console.log("Added matches: every to every");
         return {
             draw_singletons: singletons,
@@ -262,8 +276,8 @@ class MD_Competition extends MD_MasterClass {
         this.match2results(match).forEach((rslt, index) => {
             res.push(new this.constructor.innerClassParticipantResult(
                 {
-                    md_participant: match.md_participants[index],
-                    md_result: rslt
+                    participant: match.participants[index],
+                    result: rslt
                 }
             ));
         });
@@ -275,62 +289,79 @@ class MD_Competition extends MD_MasterClass {
     }
 
     addParticipant(participant){
-        this.md_participants_results.push(
-            new this.constructor.innerClassParticipantResult({
-                md_participant:participant,
-                md_result: new this.constructor.innerClassParticipantResult.innerClassResult()
-            })
-        );
+        this.participants.push(participant);
+    }
+
+    addParticipantResult(participant, result=undefined){
+        if(!participant instanceof this.constructor.innerClassParticipant){
+            throw new IncorrectValues("participant", "participant has to be instance of innerClassParticipant");
+        }
+
+        if (result === undefined){
+            result = new this.constructor.innerClassParticipantResult.innerClassResult();
+        }
+        if(!result instanceof this.constructor.innerClassParticipantResult.innerClassResult){
+            throw new IncorrectValues("result", "result has to be instance of innerClassResult");
+        }
+
+        if (!this.participants.includes(participant)){
+            this.addParticipant(participant);
+        }
+
+        this.participants_results.push(new this.constructor.innerClassParticipantResult({
+            participant: participant,
+            result: result
+        }));
     }
 
     resetAllResults(){
         this.md_participants_results.forEach(prt_rslt => {
-           prt_rslt.md_result.reset()});
+           prt_rslt.result.reset()});
     }
 
-    getParticipantResult_byParticipantMDid(md_id){
-        return this.md_participants_results.find(pr => pr.md_participant.md_id === md_id);
+    getParticipantResult_byParticipantId(id){
+        return this.participants_results.find(pr => pr.participant.id === id);
     }
 
     get_participants(){
-        return this.md_participants_results.map(pr => pr.md_participant);
+        return this.participants;
     }
 
-    get_participants_MDids(){
-        return this.md_participants_results.map(pr => pr.md_participant.md_id);
+    get_participants_Ids(){
+        return this.participants.map(prtcpnt => prtcpnt.id);
     }
 
     get_participants_names(){
-        return this.md_participants_results.map(pr => pr.md_participant.md_name);
+        return this.participants.map(prtcpnt => prtcpnt.name);
     }
 
     addMatch(match){
-        this.md_matches.push(new this.constructor.innerClassMatch(match));
+        this.matches.push(new this.constructor.innerClassMatch(match));
     }
 
-    getMatch_byMDid(md_id){
-        return this.md_matches.find(m => m.md_id === md_id);
+    getMatch_byId(id){
+        return this.matches.find(m => m.id === id);
     }
 
     getMatches_playedOut(){
-        return this.md_matches.filter(match => !match.isUnplayed());
+        return this.matches.filter(match => !match.isUnplayed());
     }
 
     getMatches_unplayed(){
-        return this.md_matches.filter(match => match.isUnplayed());
+        return this.matches.filter(match => match.isUnplayed());
     }
 
     getNextUnplayedMatch(){
-        return this.md_matches.find(match => match.isUnplayed());
+        return this.matches.find(match => match.isUnplayed());
     }
 
     getMatches_ofParticipant(participant){
-        return this.md_matches.filter(match => match.md_participants.includes(participant));
+        return this.matches.filter(match => match.participants.includes(participant));
     }
 
     setScoreValuesOfMatch(match, values){
         if(Number.isInteger(match)){
-            match = this.getMatch_byMDid(match);
+            match = this.getMatch_byId(match);
         }        
         match.setScoreValues(values);
     }
@@ -344,12 +375,12 @@ class MD_Competition extends MD_MasterClass {
         // if(!this.inner_class_match.canBeUsed(match)){
         //     throw InnerClassUnusable(this.inner_class_match.name);
         // }
-        if (match.md_score.isEmpty()){ throw new NotSupportedAttributeValue("match.md_score", match.md_score.toString(), "Only played/filled match can be accounted");}
+        if (match.score.isEmpty()){ throw new NotSupportedAttributeValue("match.score", match.score.toString(), "Only played/filled match can be accounted");}
         
         this.transform_matchToParticipantsResults(match).forEach(match_result => {
-                this.md_participants_results.find(pr =>
-                    pr.md_participant === match_result.md_participant).md_result.add(
-                        match_result.md_result);
+                this.participants_results.find(pr =>
+                    pr.participant === match_result.participant).result.add(
+                        match_result.result);
         });
     }
 
@@ -372,15 +403,15 @@ class MD_Competition extends MD_MasterClass {
 
     sortResults(sortFce=undefined){
         sortFce = sortFce || this.constructor.defaultSortResultFce;
-        this.md_participants_results.sort((a,b) => {
-            return sortFce(a.md_result, b.md_result);
+        this.participants_results.sort((a,b) => {
+            return sortFce(a.result, b.result);
         });
     }
 
     showCountedOrder(){
         console.log("Order:");
         let order = 1;
-        this.md_participants_results.forEach(prt_rslt => {
+        this.participants_results.forEach(prt_rslt => {
             console.log(`\t${order}#\t${prt_rslt.toString()}`);
             order++;
         });

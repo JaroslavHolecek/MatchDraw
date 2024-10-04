@@ -18,6 +18,10 @@ function SetRange(max){
     return all;
 }
 
+function maxOfPropertyOfArray(array, property){
+    return array.reduce((a, b) => Math.max(a, b[property]), -Infinity);
+}
+
 
 
 function selectOneDimFromListByIds(list, ids){
@@ -141,6 +145,7 @@ function shortStringDate(date){
 module.exports = {
     ArrayTwodim,
     SetRange,
+    maxOfPropertyOfArray,
     selectOneDimFromListByIds,
     selectTwoDimFromListByIds,
     indexesOfMaxInArray,
