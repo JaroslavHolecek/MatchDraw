@@ -46,3 +46,4 @@ You can contribute to project and/or make author happy via
  - Match sorter - to sort matches in plyable maner (no that one player plays consequnenting matches etc.)
  - Maximum weight matching for triples/4/5 etc... (is this even possible/exist some paper for this?)
  - OR statment in asserts -> assert pass if one of mutualy exclusive possibilities occure 
+ - check if weigths/draw can be done better via flow

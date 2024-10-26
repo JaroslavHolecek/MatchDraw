@@ -1,4 +1,50 @@
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.MatchDraw = f()}})(function(){var define,module,exports;return (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
+const { MD_MasterClass } = require("./MD_MasterClass");
+const { IncorrectValues } = require("../Core/MD_Errors");
+
+/**
+ * Basic class for club
+ * -> extend it as you need
+ */
+class MD_Club extends MD_MasterClass{
+    static md_description = "Simple Club with id and name only.";
+    static md_name = "Club";
+
+    /* data={id:Number, name:String} */
+    static data_check(data, check_recursively=false){
+        if(!('id' in data)){
+            throw new IncorrectValues(this.md_name, "md_id has to be set");
+        }
+        if(!('name' in data)){
+            throw new IncorrectValues(this.md_name, "md_name has to be set");
+        }
+    }
+
+    // constructor(gg/*={id:Number, name:String}*/){
+    //     super(gg);
+    // }
+
+    get id(){return this.md_data.id;}
+    set id(id){this.md_data.id = id;}
+    get name(){return this.md_data.name;}
+    set name(name){this.md_data.name = name;}
+
+
+    toString(){
+        return `${this.constructor.md_name}: (${this.id}) ${this.name}`;
+    }
+    toJSON(){
+        return {
+            id: this.id,
+            name: this.name
+        };
+    }
+}
+
+module.exports = {
+    MD_Club
+}
+},{"../Core/MD_Errors":12,"./MD_MasterClass":3}],2:[function(require,module,exports){
 const {
     MD_MasterClass
 } = require('./MD_MasterClass');
@@ -21,6 +67,9 @@ const {
 const { 
     every2every
 } = require('../Core/MD_MatchGenerator');
+const {
+    maxOfPropertyOfArray
+} = require('../Core/MD_Helpers');
 
 /**
  * Object used as parameter to draw() function.
@@ -33,47 +82,56 @@ const {
 
 /**
  * Basic class that holds connection between participant and overall result
+ * Participant can be any inner class - it is not checked here,
+ * because Participant will be read from Participants list in tournament
  */
 class MD_ParticipantResult extends MD_MasterClass {
     static md_description = "Hold connection between participant and its result."
     static md_name = "Participant's result";
-    static innerClassParticipant = MD_Participant;
+    // change these in your extending class
     static innerClassResult = MD_Result_Points;
 
-    /* #data={md_participant:innerClassParticipant, md_result:innerClassResult} */
-    static data_check(data, check_inner=false){
-        if(!('md_participant' in data)){
-            throw new IncorrectValues(this.md_name, "md_participant has to be set");
+    /* data={participant:MD_Participant, result:innerClassResult} */
+    static data_check(data, check_recursively=false){
+        if(!('participant' in data)){
+            throw new IncorrectValues(this.md_name, "participant has to be set");
         }
-        if(!('md_result' in data)){
-            throw new IncorrectValues(this.md_name, "md_result has to be set");
+        if(!('result' in data)){
+            throw new IncorrectValues(this.md_name, "result has to be set");
         }
 
-        if(check_inner){
-            this.innerClassParticipant.data_check(data.md_participant);
-            this.innerClassResult.data_check(data.md_result);
+        if(check_recursively){
+            this.innerClassResult.data_check(data.result, check_recursively);
         }
 
     }
 
-    constructor(gg/*={md_participant:innerClassParticipant, md_result:innerClassResult}*/){
+    // gg = {participant:MD_Participant, result:innerClassResult}
+    constructor(gg){
         super(gg);
-        this.md_participant = gg.md_participant;        
-        this.md_result = gg.md_result        
+        this.participant = gg.participant;        
+        this.result = gg.result        
     }
-    get md_participant(){return this.md_data.md_participant;}
-    set md_participant(participant){this.md_data.md_participant = new this.constructor.innerClassParticipant(participant);}
-    get md_result(){return this.md_data.md_result;}
-    set md_result(result){this.md_data.md_result = new this.constructor.innerClassResult(result);}
+
+    set result(result){this.md_data.result = new this.constructor.innerClassResult(result);}
+    get result(){return this.md_data.result;}
 
     toString(){
-        return `${this.md_participant.toString()}\n\t${this.md_result.toString()}`;
+        return `${this.participant.toString()}\n\t${this.result.toString()}`;
+    }
+
+    // static fromJSON(json, participantsList)
+    static fromObject(obj, support){
+        return new this({
+            participant: support.participants_array.find(p => p.id === obj.participant_id),
+            result: this.innerClassResult.fromObject(obj.result, support)
+        });
     }
 
     toJSON(){
         return {
-            md_participant: this.md_participant.toJSON(),
-            md_result: this.md_result.toJSON()
+            participant_id: this.participant.id,
+            result: this.result.toJSON()
         };
     }
 
@@ -95,97 +153,101 @@ class MD_ParticipantResult extends MD_MasterClass {
  * Extend class for adding another info like place, date etc.
  */
 class MD_Competition extends MD_MasterClass {
+    // change these in your extending class
     static md_description = "Basic class for competition. Consist of id, name, participants with its results and matches.";
     static md_name = "Basic competition";
+    static innerClassParticipant = MD_Participant;
     static innerClassParticipantResult = MD_ParticipantResult;
     static innerClassMatch = MD_Match;
     static defaultSortResultFce = MD_Result_Points.sort_functions.DIFF
 
-    /* #data={md_id:Number, md_name:String, md_participants_results:Array<innerClassParticipantResult>, md_matches:Array<innerClassMatch>} */
-    static data_check(data){
-        if(!('md_id' in data)){
-            throw new IncorrectValues(this.md_name, "md_id has to be set");
+    /* data={id:Number, name:String, participants:Array<innerClassParticipant>, participants_results:Array<innerClassParticipantResult>, matches:Array<innerClassMatch>} */
+    static data_check(data, check_recursively=false){
+        if(!('id' in data)){
+            throw new IncorrectValues(this.md_name, "id has to be set");
         }
-        if(!('md_name' in data)){
-            throw new IncorrectValues(this.md_name, "md_name has to be set");
+        if(!('name' in data)){
+            throw new IncorrectValues(this.md_name, "name has to be set");
         }
-        if(!('md_participants_results' in data)){
-            throw new IncorrectValues(this.md_name, "md_participants_results has to be set");
+        if(!('participants' in data)){
+            throw new IncorrectValues(this.md_name, "participants has to be set");
         }
-        if(!Array.isArray(data.md_participants_results)){
-            throw new IncorrectValues(this.md_name, "md_participants_results has to be Array");
+        if(!('participants_results' in data)){
+            throw new IncorrectValues(this.md_name, "participants_results has to be set");
         }
-        if(!('md_matches' in data)){
-            throw new IncorrectValues(this.md_name, "md_matches has to be set");
-        }
-        if(!Array.isArray(data.md_matches)){
-            throw new IncorrectValues(this.md_name, "md_matches has to be Array");
-        }
-
-        data.md_participants_results.forEach(prtcpnt_rslt => {
-            this.innerClassParticipantResult.data_check(prtcpnt_rslt);
-        });
-
-        data.md_matches.forEach(mtch => {
-            this.innerClassMatch.data_check(mtch);
-        });
-    }
-
-    constructor(gg/*={md_id:Number, md_name"String}*/){
-        gg.md_participants_results = gg.md_participants_results || [];
-        gg.md_matches = gg.md_matches || [];
-        super(gg);
-        this.md_participants_results = gg.md_participants_results; /* trigger setter */
-        this.md_matches = gg.md_matches; /* trigger setter */
-    }
-    set md_id(id){this.md_data.md_id = id;}
-    get md_id(){return this.md_data.md_id;}
-    set md_name(name){this.md_data.md_name = name;}
-    get md_name(){return this.md_data.md_name;}
-    get md_participants_results(){return this.md_data.md_participants_results;}
-    set md_participants_results(participants_results){
-        if(!Array.isArray(participants_results)){
+        if(!Array.isArray(data.participants_results)){
             throw new IncorrectValues(this.md_name, "participants_results has to be Array");
         }
-        this.md_data.md_participants_results = participants_results.map(prtcpnt_rslt => {return new this.constructor.innerClassParticipantResult(prtcpnt_rslt)});
-    }
-    get md_matches(){return this.md_data.md_matches;}
-    set md_matches(matches){
-        if(!Array.isArray(matches)){
-            throw new IncorrectValues(this.md_name, "md_matches has to be Array");
+        if(!('matches' in data)){
+            throw new IncorrectValues(this.md_name, "matches has to be set");
         }
-        this.md_data.md_matches = matches.map(mtch => {return new this.constructor.innerClassMatch(mtch)});
+        if(!Array.isArray(data.matches)){
+            throw new IncorrectValues(this.md_name, "matches has to be Array");
+        }
+
+        if(check_recursively){
+            data.participants.forEach(prtcpnt => {
+                this.innerClassParticipant.data_check(prtcpnt, check_recursively);
+            });
+
+            data.participants_results.forEach(prtcpnt_rslt => {
+                this.innerClassParticipantResult.data_check(prtcpnt_rslt, check_recursively);
+            });
+
+            data.matches.forEach(mtch => {
+                this.innerClassMatch.data_check(mtch, check_recursively);
+            });
+        }
+    }
+
+    constructor(gg/*={id:Number, name"String}*/){
+        gg.participants = gg.participants || [];
+        gg.participants_results = gg.participants_results || [];
+        gg.matches = gg.matches || [];
+        super(gg);
+    }
+
+    get id(){return this.md_data.id;}
+    set id(id){this.md_data.id = id;}
+    get name(){return this.md_data.name;}
+    set name(name){this.md_data.name = name;}
+    get participants(){return this.md_data.participants;}
+
+    set participants(participants){
+        this.md_data.participants = participants.map(participant => new this.constructor.innerClassParticipant(participant));
+    }
+
+    get participants_results(){return this.md_data.participants_results;}
+    set participants_results(participants_results){
+        this.md_data.participants_results = participants_results.map(participant_result => new this.constructor.innerClassParticipantResult(participant_result));
+    }
+
+    get matches(){return this.md_data.matches;}
+    set matches(matches){
+        this.md_data.matches = matches.map(match => new this.constructor.innerClassMatch(match));
     }
 
     toJSON(){
         return {
-            md_id: this.md_id,
-            md_name: this.md_name,
-            md_participants_results: this.md_participants_results.map(prt_rslt => prt_rslt.toJSON()),             
-            md_matches: this.md_matches.map(mtch => mtch.toJSON()),
+            id: this.id,
+            name: this.name,
+            participants: this.participants.map(prtcpnt => prtcpnt.toJSON()),
+            participants_results: this.participants_results.map(prt_rslt => prt_rslt.toJSON()),             
+            matches: this.matches.map(mtch => mtch.toJSON()),
         };
     }
 
-    static preprocesJSON(parsedJSON){
-        let participants_results = [];
-        let matches = [];
-
-        parsedJSON.md_participants_results.forEach(inner => {
-            participants_results.push(this.innerClassParticipantResult.fromJSON(inner));
+    static fromObject(obj, support={}){
+        support.participants_array = obj.participants.map(prtcpnt => this.innerClassParticipant.fromObject(prtcpnt, support));
+        return new this({
+            id: obj.id,
+            name: obj.name,
+            participants: support.participants_array,
+            participants_results: obj.participants_results.map(prt_rslt => this.innerClassParticipantResult.fromObject(prt_rslt, support)),
+            matches: obj.matches.map(mtch => this.innerClassMatch.fromObject(mtch, support))
         });
-
-        let participants = participants_results.map(prt_res => prt_res.md_participant);
-        parsedJSON.md_matches.forEach(match => {
-            matches.push(this.innerClassMatch.fromJSON(match, participants));
-        });
-
-        return {
-            md_id: parsedJSON.md_id,
-            md_name: parsedJSON.md_name,
-            md_participants_results: participants_results,
-            md_matches: matches
-        };
     }
+
 
     /* ***************************** */
     /* *** TO OVERRIDE FUNCTIONS *** */
@@ -213,14 +275,14 @@ class MD_Competition extends MD_MasterClass {
     draw_inner(arg_obj){
         let {matches, singletons} = every2every(this.get_participants());
         let draw_matches = [];
-        let first_id = this.md_matches.length+1;
+        let first_id = maxOfPropertyOfArray(this.matches, "id") + 1;
         matches.forEach((mtch, index) => {
             draw_matches.push(new this.constructor.innerClassMatch({
-                md_id: first_id + index,
-                md_participants: mtch
+                id: first_id + index,
+                participants: mtch
             }))            
         });
-        this.md_matches.push(...draw_matches);
+        this.matches.push(...draw_matches);
         console.log("Added matches: every to every");
         return {
             draw_singletons: singletons,
@@ -263,8 +325,8 @@ class MD_Competition extends MD_MasterClass {
         this.match2results(match).forEach((rslt, index) => {
             res.push(new this.constructor.innerClassParticipantResult(
                 {
-                    md_participant: match.md_participants[index],
-                    md_result: rslt
+                    participant: match.participants[index],
+                    result: rslt
                 }
             ));
         });
@@ -276,62 +338,79 @@ class MD_Competition extends MD_MasterClass {
     }
 
     addParticipant(participant){
-        this.md_participants_results.push(
-            new this.constructor.innerClassParticipantResult({
-                md_participant:participant,
-                md_result: new this.constructor.innerClassParticipantResult.innerClassResult()
-            })
-        );
+        this.participants.push(participant);
+    }
+
+    addParticipantResult(participant, result=undefined){
+        if(!participant instanceof this.constructor.innerClassParticipant){
+            throw new IncorrectValues("participant", "participant has to be instance of innerClassParticipant");
+        }
+
+        if (result === undefined){
+            result = new this.constructor.innerClassParticipantResult.innerClassResult();
+        }
+        if(!result instanceof this.constructor.innerClassParticipantResult.innerClassResult){
+            throw new IncorrectValues("result", "result has to be instance of innerClassResult");
+        }
+
+        if (!this.participants.includes(participant)){
+            this.addParticipant(participant);
+        }
+
+        this.participants_results.push(new this.constructor.innerClassParticipantResult({
+            participant: participant,
+            result: result
+        }));
     }
 
     resetAllResults(){
         this.md_participants_results.forEach(prt_rslt => {
-           prt_rslt.md_result.reset()});
+           prt_rslt.result.reset()});
     }
 
-    getParticipantResult_byParticipantMDid(md_id){
-        return this.md_participants_results.find(pr => pr.md_participant.md_id === md_id);
+    getParticipantResult_byParticipantId(id){
+        return this.participants_results.find(pr => pr.participant.id === id);
     }
 
     get_participants(){
-        return this.md_participants_results.map(pr => pr.md_participant);
+        return this.participants;
     }
 
-    get_participants_MDids(){
-        return this.md_participants_results.map(pr => pr.md_participant.md_id);
+    get_participants_Ids(){
+        return this.participants.map(prtcpnt => prtcpnt.id);
     }
 
     get_participants_names(){
-        return this.md_participants_results.map(pr => pr.md_participant.md_name);
+        return this.participants.map(prtcpnt => prtcpnt.name);
     }
 
     addMatch(match){
-        this.md_matches.push(new this.constructor.innerClassMatch(match));
+        this.matches.push(new this.constructor.innerClassMatch(match));
     }
 
-    getMatch_byMDid(md_id){
-        return this.md_matches.find(m => m.md_id === md_id);
+    getMatch_byId(id){
+        return this.matches.find(m => m.id === id);
     }
 
     getMatches_playedOut(){
-        return this.md_matches.filter(match => !match.isUnplayed());
+        return this.matches.filter(match => !match.isUnplayed());
     }
 
     getMatches_unplayed(){
-        return this.md_matches.filter(match => match.isUnplayed());
+        return this.matches.filter(match => match.isUnplayed());
     }
 
     getNextUnplayedMatch(){
-        return this.md_matches.find(match => match.isUnplayed());
+        return this.matches.find(match => match.isUnplayed());
     }
 
     getMatches_ofParticipant(participant){
-        return this.md_matches.filter(match => match.md_participants.includes(participant));
+        return this.matches.filter(match => match.participants.includes(participant));
     }
 
     setScoreValuesOfMatch(match, values){
         if(Number.isInteger(match)){
-            match = this.getMatch_byMDid(match);
+            match = this.getMatch_byId(match);
         }        
         match.setScoreValues(values);
     }
@@ -345,12 +424,12 @@ class MD_Competition extends MD_MasterClass {
         // if(!this.inner_class_match.canBeUsed(match)){
         //     throw InnerClassUnusable(this.inner_class_match.name);
         // }
-        if (match.md_score.isEmpty()){ throw new NotSupportedAttributeValue("match.md_score", match.md_score.toString(), "Only played/filled match can be accounted");}
+        if (match.score.isEmpty()){ throw new NotSupportedAttributeValue("match.score", match.score.toString(), "Only played/filled match can be accounted");}
         
         this.transform_matchToParticipantsResults(match).forEach(match_result => {
-                this.md_participants_results.find(pr =>
-                    pr.md_participant === match_result.md_participant).md_result.add(
-                        match_result.md_result);
+                this.participants_results.find(pr =>
+                    pr.participant === match_result.participant).result.add(
+                        match_result.result);
         });
     }
 
@@ -373,15 +452,15 @@ class MD_Competition extends MD_MasterClass {
 
     sortResults(sortFce=undefined){
         sortFce = sortFce || this.constructor.defaultSortResultFce;
-        this.md_participants_results.sort((a,b) => {
-            return sortFce(a.md_result, b.md_result);
+        this.participants_results.sort((a,b) => {
+            return sortFce(a.result, b.result);
         });
     }
 
     showCountedOrder(){
         console.log("Order:");
         let order = 1;
-        this.md_participants_results.forEach(prt_rslt => {
+        this.participants_results.forEach(prt_rslt => {
             console.log(`\t${order}#\t${prt_rslt.toString()}`);
             order++;
         });
@@ -395,7 +474,7 @@ module.exports = {
 
 
 
-},{"../Core/MD_Errors":11,"../Core/MD_MatchGenerator":13,"./MD_MasterClass":2,"./MD_Match":3,"./MD_Match2Results":4,"./MD_Participant":5,"./MD_Result":7}],2:[function(require,module,exports){
+},{"../Core/MD_Errors":12,"../Core/MD_Helpers":13,"../Core/MD_MatchGenerator":14,"./MD_MasterClass":3,"./MD_Match":4,"./MD_Match2Results":5,"./MD_Participant":6,"./MD_Result":8}],3:[function(require,module,exports){
 const { MissingProperty } = require("../Core/MD_Errors");
 
 class MD_MasterClass{
@@ -403,8 +482,8 @@ class MD_MasterClass{
     static md_name = "MasterClass";
 
     #md_data;
-    static data_check(data){
-        /* throw Errro if data are not correct */
+    static data_check(data, check_recursively=false){
+        /* throw Error if data are not correct */
     }
     
     constructor(gg={}){
@@ -416,7 +495,27 @@ class MD_MasterClass{
         }
 
         //this.md_data = structuredClone(gg);
-        this.md_data = gg;
+        this.md_data = gg; // see setter of md_data
+    
+        // /* you need not write trivial getter and setter for every property,
+        //  but just for those, where something interisting will happen */
+        // return new Proxy(this, {
+        //     get: (target, prop) => {
+        //         if (prop in target) {
+        //             return target[prop];
+        //         } else {
+        //             return target.#md_data[prop];
+        //         }
+        //     },
+        //     set: (target, prop, value) => {
+        //         if (prop in target) {
+        //             target[prop] = value;
+        //         } else {
+        //             target.#md_data[prop] = value;
+        //         }
+        //         return true;
+        //     }
+        // });
     }
 
     copy(){
@@ -433,12 +532,18 @@ class MD_MasterClass{
         }
     };
 
-    static preprocesJSON(parsedJSON, ...args){
-        return parsedJSON;
+    static fromJSON(json, support){
+        return this.fromObject(json, support);
     }
 
-    static fromJSON(parsedJSON, ...args){
-        return new this(this.preprocesJSON(parsedJSON, ...args));
+    /* override this functions in extending class */
+    static fromObject(obj, support){
+        this.data_check(obj, false);
+        return new this(obj);
+    }
+
+    toJSON(){
+        return this.md_data;
     }
 
     // static fillInFrom(to, from){
@@ -487,7 +592,7 @@ class MD_MasterClass{
 }
 
 module.exports = {MD_MasterClass};
-},{"../Core/MD_Errors":11}],3:[function(require,module,exports){
+},{"../Core/MD_Errors":12}],4:[function(require,module,exports){
 const { MD_MasterClass } = require("./MD_MasterClass");
 const { MD_Score_Simple } = require("./MD_Score");
 const { MD_Participant } = require("./MD_Participant");
@@ -501,110 +606,111 @@ const { IncorrectValues } = require("../Core/MD_Errors");
  *  eventualy md_name
  */
 class MD_Match extends MD_MasterClass {
+    // change these in your extending class
     static md_description = "Has its id, array of Participants and score.";
     static md_name = "Match";
     static innerClass_Score = MD_Score_Simple;
     static innerClass_Participant = MD_Participant;
 
-    /* #data = {md_id:Number, md_participants:Array<innerClass_Participant>, md_score:innerClass_Score} */
-    static data_check(data){
-        if(!('md_id' in data)){
-            throw new IncorrectValues(this.md_name, "md_id has to be set");
+    /* #data = {id:Number, participants:Array<innerClass_Participant>, score:innerClass_Score} */
+    static data_check(data, check_recursively=false){
+        if(!('id' in data)){
+            throw new IncorrectValues(this.md_name, "id has to be set");
         }
-        if(!('md_participants' in data)){
-            throw new IncorrectValues(this.md_name, "md_participants has to be set");
+        if(!('participants' in data)){
+            throw new IncorrectValues(this.md_name, "participants has to be set");
         }
-        if(!Array.isArray(data.md_participants)){
-            throw new IncorrectValues(this.md_name, "md_participants has to be Array");
-        }
-        if(!('md_score' in data)){
-            throw new IncorrectValues(this.md_name, "md_score has to be set");
-        }
-        if(data.md_score){
-            this.innerClass_Score.data_check(data.md_score);
-        }
-        data.md_participants.forEach(prtcpnt => {
-            this.innerClass_Participant.data_check(prtcpnt);
-        });
-
-    }
-
-    constructor(gg/*={md_id:Number, md_participants: Array<innerClass_Participant>, md_score:innerClass_Score}*/){
-        gg.md_score = gg.md_score || {md_values:[]};
-        super(gg);
-        this.md_participants = gg.md_participants; /* trigger setter */
-        this.md_score = gg.md_score; /* trigger setter */
-    }
-    get md_id(){return this.md_data.md_id;}
-    set md_id(id){this.md_data.md_id = id;}
-    get md_participants(){return this.md_data.md_participants;}
-    set md_participants(participants){
-        if(!Array.isArray(participants)){
+        if(!Array.isArray(data.participants)){
             throw new IncorrectValues(this.md_name, "participants has to be Array");
         }
-        this.md_data.md_participants = participants.map(prtcpnt => {return new this.constructor.innerClass_Participant(prtcpnt)});
-    }
-    get md_score(){return this.md_data.md_score;}
-    set md_score(score){
-        this.md_data.md_score = new this.constructor.innerClass_Score(score);
+        if(!('score' in data)){
+            throw new IncorrectValues(this.md_name, "score has to be set");
+        }
+
+        if(check_recursively){
+            if(data.score){
+                this.innerClass_Score.data_check(data.score, check_recursively);
+            }
+            data.participants.forEach(prtcpnt => {
+                this.innerClass_Participant.data_check(prtcpnt, check_recursively);
+            });
+        }
     }
 
+    constructor(gg/*={id:Number, participants: Array<innerClass_Participant>, score:innerClass_Score}*/){
+        gg.score = gg.score || {md_values:[]};
+        super(gg);
+        this.participants = gg.participants; /* trigger setter */
+        this.score = gg.score; /* trigger setter */
+    }
+
+    get id(){return this.md_data.id;}
+    set id(id){this.md_data.id = id;}
+    get participants(){return this.md_data.participants;}
+    set participants(participants){
+        this.md_data.participants = participants.map(participant => new this.constructor.innerClass_Participant(participant));
+    }
+    get score() {return this.md_data.score;}    
+    set score(score){
+        this.md_data.score = new this.constructor.innerClass_Score(score);
+    }
+    
+
     toString(){
-        return `${this.constructor.md_name} ${this.md_id}:\n\t${this.get_all_participants_string()}\n\t${this.md_score.toString()}`;
+        return `${this.constructor.md_name} ${this.id}:\n\t${this.get_all_participants_string()}\n\t${this.score.toString()}`;
     }
 
     toJSON(){
         return {
-            md_id: this.md_id,
-            participants_md_ids: this.get_participants_MDids(),
-            md_score: this.md_score.toJSON()
+            id: this.id,
+            participants_ids: this.get_participants_ids(),
+            score: this.score.toJSON()
         };
     }
 
-    static preprocesJSON(parsedJSON, participants_array){
-        let participants = 
-            parsedJSON.participants_md_ids.map((prtcpnt_id) => participants_array.find((prtcpnt) => prtcpnt.md_id === prtcpnt_id));
-        
-        return {
-            md_id: parsedJSON.md_id,
-            md_participants: participants,
-            md_score: parsedJSON.md_score
-        }
+    static fromObject(obj, support){
+        obj.participants = obj.participants_ids.map((prtcpnt_id) => support.participants_array.find((prtcpnt) => prtcpnt.id === prtcpnt_id));
+        this.data_check(obj, true);
+        return new this({
+            id: obj.id,
+            participants: obj.participants,
+            score: new this.innerClass_Score(obj.score)
+        });
     }
 
     setScoreValues(values){
-        this.md_score.md_values = values
+        this.score.md_values = values
     }
 
     isUnplayed(){
-        return this.md_score.isEmpty();
+        return this.score.isEmpty();
     }
 
-    get_participants_MDids(){
-        return this.md_participants.map(participant => participant.md_id);
+    get_participants_ids(){
+        return this.participants.map(participant => participant.id);
     }
 
     get_participants_names(){
-        return this.md_participants.map(participant => participant.md_name);
+        return this.participants.map(participant => participant.name);
     }
 
     get_all_participants_string(){
-        return this.md_participants.map(prtcpnt => {return prtcpnt.toString()}).join(" x ");
+        return this.participants.map(prtcpnt => {return prtcpnt.toString()}).join(" x ");
     }
 }
 
 module.exports = {
     MD_Match
 }
-},{"../Core/MD_Errors":11,"./MD_MasterClass":2,"./MD_Participant":5,"./MD_Score":8}],4:[function(require,module,exports){
+},{"../Core/MD_Errors":12,"./MD_MasterClass":3,"./MD_Participant":6,"./MD_Score":9}],5:[function(require,module,exports){
 const { resolve_functions } = require('./MD_Resolve_functions');
 const { MD_Result_Points } = require('./MD_Result');
 const { MD_Score_Simple, MD_Score_Composite } = require('./MD_Score');
 
 MD_Match2Results = {
     simpleScore2points(match){
-        let given = resolve_functions.D1.GIVE_VALUES(match.md_score.md_values);
-        let get = resolve_functions.D1.SUM_GET_VALUES(match.md_score.md_values);
+        let given = resolve_functions.D1.GIVE_VALUES(match.score.values);
+        let get = resolve_functions.D1.SUM_GET_VALUES(match.score.values);
         let res = [];
         for (let index = 0; index < given.length; index++) {
             res.push(new MD_Result_Points({given:given[index], get:get[index]}));            
@@ -615,7 +721,7 @@ MD_Match2Results = {
 
 
 module.exports = {MD_Match2Results};
-},{"./MD_Resolve_functions":6,"./MD_Result":7,"./MD_Score":8}],5:[function(require,module,exports){
+},{"./MD_Resolve_functions":7,"./MD_Result":8,"./MD_Score":9}],6:[function(require,module,exports){
 const { MD_MasterClass } = require("./MD_MasterClass");
 const { IncorrectValues } = require("../Core/MD_Errors");
 
@@ -624,42 +730,39 @@ const { IncorrectValues } = require("../Core/MD_Errors");
  * -> extend it as you need
  */
 class MD_Participant extends MD_MasterClass{
+    // change these in your extending class
     static md_description = "Simple Participant with id and name only.";
     static md_name = "Participant";
 
     /* #data={md_id:Number, md_name:String} */
     static data_check(data){
-        if(!('md_id' in data)){
-            throw new IncorrectValues(this.md_name, "md_id has to be set");
+        if(!('id' in data)){
+            throw new IncorrectValues(this.md_name, "id has to be set");
         }
-        if(!('md_name' in data)){
-            throw new IncorrectValues(this.md_name, "md_name has to be set");
+        if(!('name' in data)){
+            throw new IncorrectValues(this.md_name, "name has to be set");
         }
     }
 
-    // constructor(gg/*={md_id:Number, md_name:String}*/){
+    // constructor(gg/*={id:Number, name:String}*/){
     //     super(gg);
     // }
-    set md_id(id){this.md_data.md_id = id;}
-    get md_id(){return this.md_data.md_id;}
-    set md_name(name){this.md_data.md_name = name;}
-    get md_name(){return this.md_data.md_name;}
 
+    get id(){return this.md_data.id;}
+    set id(id){this.md_data.id = id;}
+    get name(){return this.md_data.name;}
+    set name(name){this.md_data.name = name;}
+    
+  
     toString(){
-        return `${this.constructor.md_name}: (${this.md_id}) ${this.md_name}`;
-    }
-    toJSON(){
-        return {
-            md_id: this.md_id,
-            md_name: this.md_name
-        }
+        return `${this.constructor.name}: (${this.id}) ${this.name}`;
     }
 }
 
 module.exports = {
     MD_Participant
 }
-},{"../Core/MD_Errors":11,"./MD_MasterClass":2}],6:[function(require,module,exports){
+},{"../Core/MD_Errors":12,"./MD_MasterClass":3}],7:[function(require,module,exports){
 const {
     sumArray, 
     sumAllArrays, 
@@ -721,7 +824,7 @@ resolve_functions = {
 }
 
 module.exports = {resolve_functions};
-},{"../Core/MD_Helpers":12}],7:[function(require,module,exports){
+},{"../Core/MD_Helpers":13}],8:[function(require,module,exports){
 const { MD_MasterClass } = require("./MD_MasterClass");
 const { IncorrectValues } = require("../Core/MD_Errors");
 
@@ -742,23 +845,18 @@ class MD_Result_GivenGet extends MD_MasterClass {
     constructor(gg={given:0, get:0}){
         super(gg);
     }
+    set given(given){this.md_data.given = given;}
+    get given(){return this.md_data.given;}
+    set get(get){this.md_data.get = get;}
+    get get(){return this.md_data.get;}
+    
     reset(gg={given:0, get:0}){
         this.given = gg.given;
         this.get = gg.get;
     }
-    set given(points){this.md_data.given = points;}
-    get given(){return this.md_data.given;}
-    set get(points){this.md_data.get = points;}
-    get get(){return this.md_data.get;}
 
     toString(){
         return `${this.constructor.md_name}: +${this.given}\u00A0-${this.get}\u00A0(${this.given-this.get})`;
-    }
-    toJSON(){
-        return {
-            given: this.given,
-            get: this.get
-        }
     }
 
     static sum(r1, r2){
@@ -830,7 +928,7 @@ class MD_Result_Sets_Points extends MD_MasterClass {
     static innerClassSets = MD_Result_Sets;
 
     /* #data = {points:innerClassPoints, sets:innerClassSets} */
-    static data_check(data){
+    static data_check(data, check_recursively=false){
         if(!('points' in data)){
             throw new IncorrectValues(this.md_name, "points has to be set");
         }
@@ -838,8 +936,10 @@ class MD_Result_Sets_Points extends MD_MasterClass {
             throw new IncorrectValues(this.md_name, "sets has to be set");
         }
 
-        this.innerClassPoints.data_check(data.points);
-        this.innerClassSets.data_check(data.sets);
+        if(check_recursively){
+            this.innerClassPoints.data_check(data.points);
+            this.innerClassSets.data_check(data.sets);
+        }
     }
 
     constructor(gg={points:{given:0, get:0}, sets:{given:0,get:0}}){
@@ -852,19 +952,13 @@ class MD_Result_Sets_Points extends MD_MasterClass {
         this.sets.reset(gg.sets);
     }
     /* you can also (preferably) change values of for example points like this: result.points.give = 3 */
-    get points(){return this.md_data.points;}
     set points(points){this.md_data.points = new this.constructor.innerClassPoints(points);}
-    get sets(){return this.md_data.sets;}
+    get points(){return this.md_data.points;}
     set sets(sets){this.md_data.sets = new this.constructor.innerClassSets(sets);}
+    get sets(){return this.md_data.sets;}
 
     toString(){
         return `${this.sets.toString()} ${this.points.toString()}`;
-    }
-    toJSON(){
-        return {
-            points: this.points.toJSON(),
-            sets: this.sets.toJSON()
-        };
     }
 
     static sum(r1, r2){
@@ -900,12 +994,66 @@ class MD_Result_Sets_Points extends MD_MasterClass {
     }
 }
 
+class MD_Result_OneValue extends MD_MasterClass {
+    static md_description = "One value";
+    static md_name = "OneValue";
+
+    /* #data {value:_} */
+    static data_check(data){
+        if(!('value' in data)){
+            throw new IncorrectValues(this.md_name, "value has to be set");
+        }
+    }
+
+    constructor(gg={value:0}){
+        super(gg);
+    }
+    set value(val){this.md_data.value = val;}
+    get value(){return this.md_data.value;}
+
+    reset(gg={value:0}){
+        this.value = gg.value;
+    }
+
+    toString(){
+        return `${this.constructor.md_name}: ${this.value}`;
+    }
+
+    static sum(r1, r2){
+        return new this.constructor(
+            {
+                value: r1.value + r2.value
+            }
+        );
+    }
+
+    add(other){
+        this.value += other.value;
+    }
+
+    /**
+     * compareFn for Array.prototype.sort
+     */
+    static sort_functions = {
+        /**
+         * r1 before r2 if r1 value is greater than r2 value
+         * @param {MD_Result_OneValue} r1 
+         * @param {MD_Result_OneValue} r2 
+         * @returns difference of values
+         */
+        DECS(r1, r2){
+            return r2.value - r1.value;
+        }
+    }
+}
+
 module.exports = { 
     MD_Result_Points, 
     MD_Result_Sets, 
-    MD_Result_Sets_Points 
+    MD_Result_Sets_Points,
+    MD_Result_OneValue,
 };
-},{"../Core/MD_Errors":11,"./MD_MasterClass":2}],8:[function(require,module,exports){
+},{"../Core/MD_Errors":12,"./MD_MasterClass":3}],9:[function(require,module,exports){
 const { MD_MasterClass } = require("./MD_MasterClass");
 const { InnerClassUnusable, IncorrectValues } = require("../Core/MD_Errors");
 
@@ -926,8 +1074,12 @@ class MD_Score_Simple extends MD_MasterClass {
 
     /* #md_data = {md_values:Array} */
     static data_check(data){
+
+        if(!('md_values' in data)){
+            throw new IncorrectValues(this.md_name, "md_values has to be set");
+        }
         if(!Array.isArray(data.md_values)){
-            throw new IncorrectValues(this.md_name, "Values has to be Array");
+            throw new IncorrectValues(this.md_name, "md_values has to be Array");
         }
     }
 
@@ -935,9 +1087,9 @@ class MD_Score_Simple extends MD_MasterClass {
      * 
      * @param {{md_values:Array}}} gg
      */
-    constructor(gg={md_values:[]}){
-        super(gg);
-    }
+    // constructor(gg={md_values:[]}){
+    //     super(gg);
+    // }
 
     /**
      * @param {any[]} md_values
@@ -952,12 +1104,6 @@ class MD_Score_Simple extends MD_MasterClass {
 
     toString(){
         return `${this.constructor.md_name}: ${this.isEmpty() ? "_____" : this.md_values.join(" x ")}`;
-    }
-
-    toJSON(){
-        return {
-            md_values: this.md_values
-        }
     }
 
     /**
@@ -988,8 +1134,11 @@ class MD_Score_Composite extends MD_MasterClass{
     /* #md_data;  {md_values:Array<innerClass_Score>} */
 
     static data_check(data, check_inner=false){
+        if(!('md_values' in data)){
+            throw new IncorrectValues(this.md_name, "md_values has to be set");
+        }
         if(!Array.isArray(data.md_values)){
-            throw new IncorrectValues(this.md_name, "Values has to be Array");
+            throw new IncorrectValues(this.md_name, "md_values has to be Array");
         }
 
         if(check_inner){
@@ -1005,6 +1154,7 @@ class MD_Score_Composite extends MD_MasterClass{
      */
     constructor(gg={md_values:[]}){
         super(gg);
+        this.md_values = gg.md_values; /* trigger setter */
     }
     
     set md_values(values_es){
@@ -1044,6 +1194,16 @@ class MD_Score_Composite extends MD_MasterClass{
         }
     }
 
+    static fromObject(obj, support){
+        this.data_check(obj, true);
+        let gg = {md_values: []};
+        obj.md_values.forEach(inner => {
+            gg.md_values.push(this.innerClass_Score.fromObject(inner, support));
+        });
+        return new this(gg);
+    }
+
+
     /**
      * Function that recursively resolve inner score objects using provided functions and its arguments
      * @param {MD_arg_Resolve} resolve_fce_and_arg Functions and its arguments
@@ -1074,7 +1234,7 @@ module.exports = {
     MD_Score_Simple,
     MD_Score_Composite
 };
-},{"../Core/MD_Errors":11,"./MD_MasterClass":2}],9:[function(require,module,exports){
+},{"../Core/MD_Errors":12,"./MD_MasterClass":3}],10:[function(require,module,exports){
 const {
     shortStringDate,
     minOfArray,
@@ -1092,6 +1252,9 @@ const {
     MD_Participant
 } = require('../Competition/MD_Participant');
 const {
+    MD_Club
+} = require('../Competition/MD_Club');
+const {
     MD_ParticipantResult,
     MD_Competition
 } = require('../Competition/MD_Competition');
@@ -1101,21 +1264,24 @@ const {
 const { 
     one4each 
 } = require('../Core/MD_MatchGenerator');
-const { MD_Result_Sets_Points } = require('../Competition/MD_Result');
+const { MD_Result_OneValue } = require('../Competition/MD_Result');
 const { MD_Score_Composite, MD_Score_Simple } = require('../Competition/MD_Score');
 const { IncorrectValues, UnexpectedCall } = require('../Core/MD_Errors');
 
-class Participant_Radon extends MD_Participant{
-    static md_description = "Participant with id, name, club and year of birth.";
+class Participant_Elo_Radon extends MD_Participant{
+    static md_description = "Participant with id, first name, second name, birthdate and club_id";
     static md_name = "Hráč/ka";
 
     /* #data={
-        md_id:Number, md_name:String,
-        club:String, birth:Date
+        id:Number, name:String, second_name:String,
+        club_id:Number, birth:Date
     } */
     static data_check(data){
         super.data_check(data);
 
+        if(!('second_name' in data)){
+            throw new IncorrectValues(this.md_name, "second_name has to be set");
+        }
         if(!('club' in data)){
             throw new IncorrectValues(this.md_name, "club has to be set");
         }
@@ -1123,43 +1289,57 @@ class Participant_Radon extends MD_Participant{
             throw new IncorrectValues(this.md_name, "birth has to be set");
         }
     }
-    constructor(gg/*={md_id:Number, md_name:String, club:String, birth:Date}*/){
+    constructor(gg/*={md_id:Number, md_name:String, second_name:String, birth:Date, club:MD_Club}*/){
         gg.birth = gg.birth instanceof Date ? gg.birth : new Date(gg.birth)
         super(gg);
     }
 
+    get second_name(){return this.md_data.second_name;}
+    set second_name(second_name){this.md_data.second_name = second_name;}
+    get birth(){return this.md_data.birth;}
+    set birth(birth){this.md_data.birth = birth;}
     get club(){return this.md_data.club;}
     set club(club){this.md_data.club = club;}
-    get birth(){return this.md_data.birth;}
-    set birth(date){this.md_data.birth = date;}
-
-
+    
     toString(){
-        return `${super.toString()} ${shortStringDate(this.birth)} ${this.club}`;
+        return `${super.toString()} ${this.second_name} ${shortStringDate(this.birth)} ${this.club.name}`;
     }
 
     toJSON(){
         return {
             ...super.toJSON(),
-            club : this.club,
+            second_name : this.second_name,
+            club_id : this.club.id,
             birth : shortStringDate(this.birth)
         };
     }
 
-    static preprocesJSON(parsedJSON){
-        return {
-            ...super.preprocesJSON(parsedJSON),
-            birth: new Date(parsedJSON.birth)
-        };
+    static fromObject(obj, support){
+        this.data_check(obj);
+        return new this({
+            id: obj.id,
+            name: obj.name,
+            second_name: obj.second_name,
+            birth: new Date(obj.birth),
+            club: support.clubs_array.find(club => club.id === obj.club_id)
+        });
     }
 }
 
-class ParticipantResult_Radon extends MD_ParticipantResult{
-    static innerClassParticipant = Participant_Radon;
-    static innerClassResult = MD_Result_Sets_Points;
+class Result_Elo extends MD_Result_OneValue{
+    static md_description = "Elo hodnota";
+    static md_name = "Elo";
+
+    toString(){
+        return `${this.constructor.md_name}: ${this.value.toFixed(2)}`;
+    }
 }
 
-class Score_Radon_Points extends MD_Score_Simple{
+class ParticipantResult_Elo_Radon extends MD_ParticipantResult{
+    static innerClassResult = Result_Elo;
+}
+
+class Score_Elo_Radon_Points extends MD_Score_Simple{
     static md_description = "Maximum je 15, např. [15,10], [14,15], ...";
     static md_name = "Míče";
 
@@ -1181,10 +1361,10 @@ class Score_Radon_Points extends MD_Score_Simple{
     }
 }
 
-class Score_Radon_Sets extends MD_Score_Composite{
+class Score_Elo_Radon_Sets extends MD_Score_Composite{
     static description = "Dva hrané sety přesně.";
     static md_name = "Sety";
-    static innerClass_Score = Score_Radon_Points;
+    static innerClass_Score = Score_Elo_Radon_Points;
 
     static data_check(data, check_inner=false){
         super.data_check(data, check_inner);
@@ -1222,55 +1402,90 @@ class Score_Radon_Sets extends MD_Score_Composite{
             ]
         )
     }
-    
-    resolve_give_sets(){
-        return this.resolve(
-            {
-                fce: resolve_functions.D2.SUM,
-                args: undefined
-            },
-            [
-                {
-                    fce: resolve_functions.D1.MARK_MAX_AND_OTHER,
-                    args: {winner_val:1, looser_val:0}
-                }
-            ]
-        )
-    }
-
-    resolve_get_sets(){
-        return this.resolve(
-            {
-                fce: resolve_functions.D2.SUM,
-                args: undefined
-            },
-            [
-                {
-                    fce: resolve_functions.D1.MARK_MAX_AND_OTHER,
-                    args: {winner_val:0, looser_val:1}
-                }
-            ]
-        )
-    }
 }
 
-class Match_Radon extends MD_Match{
+class Match_Elo_Radon extends MD_Match{
     static md_name = "Zápas";
-    static innerClass_Score = Score_Radon_Sets;
-    static innerClass_Participant = Participant_Radon;
+    static innerClass_Score = Score_Elo_Radon_Sets;
+    static innerClass_Participant = Participant_Elo_Radon;
+
+    constructor(gg/*={id:Number, participants:Array<innerClass_Participant>, score:innerClass_Score}
+                        elo_begin:Array<Number>*/){
+        gg.elo_begin = gg.elo_begin || undefined;
+        super(gg);
+    }
+
+    get elo_begin(){return this.md_data.elo_begin;}
+    set elo_begin(elo_begin){
+        this.md_data.elo_begin = elo_begin ? [...elo_begin] : [];
+    };
+
+    toString(){
+        let change_string = this.isUnplayed() ? "" : `-> změna o ${this.elo_change().map(chng => chng.toFixed(2)).join(" x ")}`;
+        return `${super.toString()}\n\tElo: ${this.elo_begin.map(e => e.toFixed(2)).join(" x ")} ${change_string}`;
+    }
+
+    toJSON(){
+        return {
+            ...super.toJSON(),
+            elo_begin: this.elo_begin,
+        };
+    }
+
+    static fromObject(obj, participants_array) {
+        // Call the fromObject method of the extended class
+        const baseInstance = super.fromObject(obj, participants_array);
+
+        // Add additional properties and return the new instance of the current class
+        return new this({
+            ...baseInstance.md_data,
+            elo_begin: obj.elo_begin,
+        });
+    }
+
+    expected_result_fraction(){
+        let expected_0 = 1/(1+10**((this.elo_begin[1]-this.elo_begin[0])/400));
+        let expected_1 = 1/(1+10**((this.elo_begin[0]-this.elo_begin[1])/400));
+        return [expected_0, expected_1];
+    }
+
+    elo_change(){
+        if(this.isUnplayed()){
+            throw new UnexpectedCall("elo_change()", "Zápas musí být odehrán")
+        }
+
+        const max_points = 30;
+        const denominator = 2*max_points; // for result value in interval <0,1>
+        const expected_fractions = this.expected_result_fraction();
+        
+        let given_points = this.score.resolve_give_points();
+        let get_points = this.score.resolve_get_points();
+        
+        const K = 30; /* koeficient of speed of elo-change (koeficient rozvoje K) */
+        let elo_change = [];
+        for (let player_index = 0; player_index < given_points.length; player_index++) {
+            let result_fraction = (given_points[player_index]-get_points[player_index] + max_points)/denominator;
+            elo_change.push(K*(result_fraction - expected_fractions[player_index]));
+        }
+        return elo_change;
+    }
 }
 
-class Tournament_Swiss_Radon extends MD_Competition{
-    static md_description = "Turnaj Švýcarským systémem na dva hrané sety do 15";
+
+
+class Tournament_Elo_Radon extends MD_Competition{
+    static md_description = "Turnaj Švýcarským systémem na základě Elo hodnoty hráčů na dva hrané sety do 15";
     static md_name = "Turnaj"
-    static innerClassParticipantResult = ParticipantResult_Radon;
-    static innerClassMatch = Match_Radon;
-    static defaultSortResultFce = MD_Result_Sets_Points.sort_functions.DIFF_S_P;
+    static innerClassParticipant = Participant_Elo_Radon;
+    static innerClassParticipantResult = ParticipantResult_Elo_Radon;
+    static innerClassMatch = Match_Elo_Radon;
+    static innerClassClub = MD_Club;
+    static defaultSortResultFce = Result_Elo.sort_functions.DECS;
     
-    /* #data={md_id:Number, md_name:String, md_participants_results:Array<innerClassParticipantResult>, md_matches:Array<innerClassMatch>,
-        date: Date, in_year_number: Number, number_of_played_round: Number
+    /* #data={id:Number, name:String, pariticipants:Array<innerClassParticipant> participants_results:Array<innerClassParticipantResult>, matches:Array<innerClassMatch>,
+        clubs: Array<MD_Club>, date: Date, in_year_number: Number, number_of_played_round: Number
     } */
-    static data_check(data){
+    static data_check(data, check_recursively=false){
         super.data_check(data);
         if(!('date' in data)){
             throw new IncorrectValues(this.md_name, "date has to be set");
@@ -1281,22 +1496,37 @@ class Tournament_Swiss_Radon extends MD_Competition{
         if(!('number_of_played_round' in data)){
             throw new IncorrectValues(this.md_name, "number_of_played_round has to be set");
         }
+        if(!('clubs' in data)){
+            throw new IncorrectValues(this.md_name, "clubs has to be set");
+        }
+
+        if(check_recursively){
+            data.clubs.forEach(club => {
+                this.innerClassClub.data_check(club);
+            });
+        }
     }
     constructor(gg/*={md_id:Number, md_name_String, date:Date, in_year_number:Number*/){
         gg.date = gg.date || new Date();
         gg.in_year_number = gg.in_year_number || 1;
         gg.number_of_played_round = gg.number_of_played_round || 0;
-        gg.overall_singletons = gg.overall_singletons || []; 
+        gg.overall_singletons = gg.overall_singletons || [];
+        gg.clubs = gg.clubs || [];
         super(gg);
     }
+
     get date(){return this.md_data.date;}
     set date(date){this.md_data.date = date;}
     get in_year_number(){return this.md_data.in_year_number;}
-    set in_year_number(number){this.md_data.in_year_number = number;}
+    set in_year_number(in_year_number){this.md_data.in_year_number = in_year_number;}
     get number_of_played_round(){return this.md_data.number_of_played_round;}
-    set number_of_played_round(number){this.md_data.number_of_played_round = number;}
+    set number_of_played_round(number_of_played_round){this.md_data.number_of_played_round = number_of_played_round;}
     get overall_singletons(){return this.md_data.overall_singletons;}
-    set overall_singletons(singletons){this.md_data.overall_singletons = singletons;}
+
+    get clubs(){return this.md_data.clubs;}
+    
+    
+
 
     addSingletons(singletons){
         this.overall_singletons.push(...singletons);
@@ -1308,23 +1538,32 @@ class Tournament_Swiss_Radon extends MD_Competition{
             date: this.date,
             in_year_number: this.in_year_number,
             number_of_played_round: this.number_of_played_round,
-            overall_singletons_md_id: this.overall_singletons.map(sngl => {return sngl.md_id;} )
+            overall_singletons_id: this.overall_singletons.map(sngl => {return sngl.id;} ),
+            clubs: this.md_data.clubs,
         };
     }
 
-    static preprocesJSON(parsedJSON){
-        let super_json = super.preprocesJSON(parsedJSON);
-        let overall_singletons = [];
-        parsedJSON.overall_singletons_md_id.forEach(sngl_id => {
-            overall_singletons.push(parsedJSON.md_participants_results.find(pr => sngl_id === pr.md_participant.md_id ).md_participant);
-        })
-        return {
-            ...super_json,
-            date: new Date(parsedJSON.date),
-            in_year_number: parsedJSON.in_year_number,
-            number_of_played_round: parsedJSON.number_of_played_round,            
-            overall_singletons: overall_singletons
-        };
+    static fromObject(obj, support={}){
+        this.data_check(obj);
+        obj.clubs = obj.clubs.map(club => {return this.innerClassClub.fromObject(club);});
+        support.clubs_array = obj.clubs;
+        
+        let baseInstance = super.fromObject(obj, support);
+        //let tmp_participants = baseInstance.participants;
+        return new this({
+            ...baseInstance.md_data,
+            //participants: tmp_participants,
+            date: new Date(obj.date),
+            in_year_number: obj.in_year_number,
+            number_of_played_round: obj.number_of_played_round,
+            overall_singletons: obj.overall_singletons_id.map(sngl_id => {return baseInstance.participants.find(pr => sngl_id === pr.id );}),
+            clubs: obj.clubs,
+        });
+    }
+
+    addClub(club){
+        let tmp_club = new this.constructor.innerClassClub(club);
+        this.clubs.push(tmp_club);
     }
 
    /**
@@ -1335,8 +1574,8 @@ class Tournament_Swiss_Radon extends MD_Competition{
     */
     generate_weights(arg_obj/*={participants_to_draw, must_play_participants, same_club_penalty, weights_policy}*/){
         /* set tmp_id as index in array of results/participants */
-        this.md_participants_results.forEach(pr => {
-            pr.md_participant.tmp_id = -1; /* remove old values */
+        this.participants_results.forEach(pr => {
+            pr.participant.tmp_id = -1; /* remove old values */
         });
         arg_obj.participants_to_draw.forEach((participant, index) => {
             participant.tmp_id = index; /* set actual values */
@@ -1348,7 +1587,7 @@ class Tournament_Swiss_Radon extends MD_Competition{
 
         /* remove edges of already drawen match -> do not repeat already played matches */
         removeEdges(weights,
-            this.md_matches.map(match => {return match.md_participants.map(p => p.tmp_id)})
+            this.matches.map(match => {return match.participants.map(p => p.tmp_id)})
         );
 
         /* decrease value of edges between participant from same club */
@@ -1357,8 +1596,6 @@ class Tournament_Swiss_Radon extends MD_Competition{
             weights.forEach(edge => {
                 if(arg_obj.participants_to_draw[edge[0]].club === arg_obj.participants_to_draw[edge[1]].club){
                     edge[2] = edge[2]-decreasing_value;
-                    //edge[2] = Math.max(edge[2]-decreasing_value, 0); /* no negative weights */
-                    //edge[2] /= decreasing_value;
                 }
             });
         }
@@ -1385,22 +1622,21 @@ class Tournament_Swiss_Radon extends MD_Competition{
         arg_obj.participants_to_draw = arg_obj.participants_to_draw || this.get_participants();
         arg_obj.must_play_participants = arg_obj.must_play_participants || [];
         arg_obj.same_club_penalty = arg_obj.same_club_penalty || 4;
-        arg_obj.weights_policy = arg_obj.weights_policy || POLICY_EDMOND_WEIGHTS.E2E_SORTED_LINEAR_PLUS_FRACTIONAL_LINEAR;
-        
-        this.sortResults();
+        arg_obj.weights_policy = arg_obj.weights_policy || POLICY_EDMOND_WEIGHTS.E2E_SORTED_NEGATIVE_LINEAR_PLUS_FRACTIONAL;
 
         let {matches, singletons} = one4each(arg_obj.participants_to_draw, this.generate_weights(arg_obj));
                      
         /* every draw match add to tournament matches */
-        let first_id = this.md_matches.length+1;
+        let first_id = this.matches.length+1;
         let draw_matches = [];
         matches.forEach((mtch, index) => {
             draw_matches.push(new this.constructor.innerClassMatch({
-                md_id: first_id + index,
-                md_participants: mtch
+                id: first_id + index,
+                participants: mtch,
+                elo_begin: mtch.map(p => this.participants_results.find(pr => pr.participant === p).result.value),
             }))            
         });
-        this.md_matches.push(...draw_matches);
+        this.matches.push(...draw_matches);
         console.log(`Přidán(y/o) ${draw_matches.length} zápas(y/ů) - metoda one4each`);
 
         return {draw_singletons: singletons, draw_matches: draw_matches};
@@ -1418,15 +1654,17 @@ class Tournament_Swiss_Radon extends MD_Competition{
             throw new UnexpectedCall("draw()", "Turnaj se hraje na 6 klasických kol a případně jedno kompenzační - ty již byly odehrány.");
         }
 
-        let participants_to_draw, must_play_participants, same_club_penalty /* by this value will be divided value of edge, so 1 is no penalty */;
+        this.sortResults();
+
+        let participants_to_draw, must_play_participants, same_club_penalty /* this value will be subtracted of value of edge, so 0 is no penalty */;
         if(actual_round <= rounds_num){ /* regular round */
             participants_to_draw = this.get_participants();
             must_play_participants = this.overall_singletons;
-            if (actual_round <= rounds_num/2){
-                same_club_penalty = participants_to_draw.length+1; /* no same club in first half */
-            }else if(actual_round === rounds_num/2 + 1){
-                same_club_penalty = 2;
-            }else{ /* last two (on 6 rounds) with no penalty */
+            if (actual_round < rounds_num/2+1){ /* first half */
+                same_club_penalty = participants_to_draw.length+1; /* no same club match */
+            }else if(actual_round < rounds_num){ /* second half without last match */
+                same_club_penalty = 3; /* small penalty */
+            }else{ /* last match */
                 same_club_penalty = 0; /* no penalty */
             }
         }else{ /* compensatory round */
@@ -1449,27 +1687,23 @@ class Tournament_Swiss_Radon extends MD_Competition{
     }
 
     match2results(match){
-        let given_sets = match.md_score.resolve_give_sets();
-        let get_sets = match.md_score.resolve_get_sets();
-        let given_points = match.md_score.resolve_give_points();
-        let get_points = match.md_score.resolve_get_points();
         let res = [];
         let result_class = this.constructor.innerClassParticipantResult.innerClassResult;
-        for (let index = 0; index < given_sets.length; index++) {
+        match.elo_change().forEach((elo_chng) => {
             res.push(new result_class({
-                points: {given: given_points[index], get: get_points[index]},
-                sets: {given: given_sets[index], get: get_sets[index]}
-            }));            
-        }
+                value: elo_chng
+            })); 
+        });           
         return res;
     }
 }
 
 module.exports = {
-    Participant_Radon,
-    Match_Radon,
-    Tournament_Swiss_Radon };
-},{"../Competition/MD_Competition":1,"../Competition/MD_Match":3,"../Competition/MD_Participant":5,"../Competition/MD_Resolve_functions":6,"../Competition/MD_Result":7,"../Competition/MD_Score":8,"../Core/MD_Errors":11,"../Core/MD_Helpers":12,"../Core/MD_MatchGenerator":13,"../Core/MD_WeightsGenerator":14}],10:[function(require,module,exports){
+    Participant_Elo_Radon,
+    Match_Elo_Radon,
+    Tournament_Elo_Radon
+};
+},{"../Competition/MD_Club":1,"../Competition/MD_Competition":2,"../Competition/MD_Match":4,"../Competition/MD_Participant":6,"../Competition/MD_Resolve_functions":7,"../Competition/MD_Result":8,"../Competition/MD_Score":9,"../Core/MD_Errors":12,"../Core/MD_Helpers":13,"../Core/MD_MatchGenerator":14,"../Core/MD_WeightsGenerator":15}],11:[function(require,module,exports){
 
 /**
  * Combinations C(n,k) n choose k
@@ -1538,7 +1772,7 @@ function maxWeightMatching(edges, maximumMatches=true){
 
 module.exports = { combinations, maxWeightMatching };
 
-},{"./Retrieved/EdmondsBlossom.js":15}],11:[function(require,module,exports){
+},{"./Retrieved/EdmondsBlossom.js":16}],12:[function(require,module,exports){
 class NotSupportedAttributeValue extends Error{
     constructor(attr_name, attr_value, message = "", ...args) {
         super(message, ...args);
@@ -1604,7 +1838,7 @@ module.exports = {
     IncorrectValues,
     UnexpectedCall
 };
-},{}],12:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 const { NotMatchArguments } = require('./MD_Errors');
 
 /**
@@ -1623,6 +1857,10 @@ function SetRange(max){
         all.add(index);        
     }
     return all;
+}
+
+function maxOfPropertyOfArray(array, property){
+    return array.reduce((a, b) => Math.max(a, b[property]), -Infinity);
 }
 
 
@@ -1748,6 +1986,7 @@ function shortStringDate(date){
 module.exports = {
     ArrayTwodim,
     SetRange,
+    maxOfPropertyOfArray,
     selectOneDimFromListByIds,
     selectTwoDimFromListByIds,
     indexesOfMaxInArray,
@@ -1760,7 +1999,7 @@ module.exports = {
     markMaxAndOtherInArray,
     shortStringDate
 };
-},{"./MD_Errors":11}],13:[function(require,module,exports){
+},{"./MD_Errors":12}],14:[function(require,module,exports){
 const { NotSupportedAttributeValue } = require('./MD_Errors');
 const { combinations, maxWeightMatching } = require('./MD_Algorithms');
 const {
@@ -1824,20 +2063,21 @@ function one4each(individuals, weights, num = 2, maximumMatches=true){
 
 
 module.exports = {every2every, one4each };
-},{"./MD_Algorithms":10,"./MD_Errors":11,"./MD_Helpers":12}],14:[function(require,module,exports){
+},{"./MD_Algorithms":11,"./MD_Errors":12,"./MD_Helpers":13}],15:[function(require,module,exports){
 const { combinations } = require('./MD_Algorithms');
 const { NotSupportedAttributeValue } = require('./MD_Errors');
 
+/* EdmoondsBlossom looking for MAXIMUM of sum of weights, so greater value of weights is prefered in result over smaller value */
 const POLICY_EDMOND_WEIGHTS = {
     E2E_EQUAL: 0, /* Every to every, each edge has same weights === 1 */
     /* Do not account distance of individuals in order */
-    E2E_SORTED_LINEAR: 1, /* Every to every, weight is linear inverse of distance between indexes (max_distance - distance + 1) */
+    E2E_SORTED_LINEAR_INVERSE: 1, /* Every to every, weight is linear inverse of distance between indexes (max_distance - distance + 1) */
     /* 1. vs 4. and 2. vs 3. have same value as 1. vs 3. and 2. vs 4. -> wich is usually not good */
-    E2E_SORTED_FRACTIONAL_LINEAR: 2, /* Every to every, weight is linear fraction of distance between indexes (1 / distance) */
-    /* Here is hard to artificaly shift order of players for example with same club to greaterr distance
-        Shift is easy, but is irregulary distributed throught higher places of order and luwer one
+    E2E_SORTED_LINEAR_FRACTIONAL: 2, /* Every to every, weight is linear fraction of distance between indexes (1 / distance) */
+    /* Here is hard to artificaly shift order of players for example with same club to greater distance
+        Shift is easy, but is irregulary distributed throught higher places of order and lower one
     */
-   E2E_SORTED_LINEAR_PLUS_FRACTIONAL_LINEAR: 3, /* combine (sum) E2E_SORTED_LINEAR and E2E_SORTED_FRACTIONAL_LINEAR */
+    E2E_SORTED_NEGATIVE_LINEAR_PLUS_FRACTIONAL: 3, /* Every to every, weights are negative -> -(distance + 1/distance) */
 };
 
 /**
@@ -1857,22 +2097,22 @@ function weightsGenerator_Edmonds(num_individuals, policy){
                 edges.push([...nodes, 1]);
             });
             break;
-        case POLICY_EDMOND_WEIGHTS.E2E_SORTED_LINEAR:
+        case POLICY_EDMOND_WEIGHTS.E2E_SORTED_LINEAR_INVERSE:
             let comb_sl = combinations(num_individuals, 2);
             comb_sl.forEach(nodes => {
                 edges.push([...nodes, num_individuals - Math.abs(nodes[1] - nodes[0])]);
             });
             break;
-        case POLICY_EDMOND_WEIGHTS.E2E_SORTED_FRACTIONAL_LINEAR:
+        case POLICY_EDMOND_WEIGHTS.E2E_SORTED_LINEAR_FRACTIONAL:
             let comb_fl = combinations(num_individuals, 2);
             comb_fl.forEach(nodes => {
                 edges.push([...nodes, 1/Math.abs(nodes[1] - nodes[0])]);
             });
             break;
-        case POLICY_EDMOND_WEIGHTS.E2E_SORTED_LINEAR_PLUS_FRACTIONAL_LINEAR:
+        case POLICY_EDMOND_WEIGHTS.E2E_SORTED_NEGATIVE_LINEAR_PLUS_FRACTIONAL:
             let comb_lfl = combinations(num_individuals, 2);
             comb_lfl.forEach(nodes => {
-                edges.push([...nodes, num_individuals - Math.abs(nodes[1] - nodes[0]) + 1/Math.abs(nodes[1] - nodes[0])]);
+                edges.push([...nodes, -(Math.abs(nodes[1] - nodes[0]) + 1/Math.abs(nodes[1] - nodes[0]))]);
             });
             break;
         default:
@@ -1883,7 +2123,7 @@ function weightsGenerator_Edmonds(num_individuals, policy){
 
 /**
  * 
- * @param {Array[NumberArray[3]]} weights probalbly returned from weightsGenerator_Edmonds
+ * @param {Array[NumberArray[3]]} weights probably returned from weightsGenerator_Edmonds
  * @param {Array[NumberArray[2]]} to_remove array of edges (Array[2]) with from_index and to_index
  */
 function removeEdges(weights, to_remove){
@@ -1904,12 +2144,12 @@ module.exports = {
     weightsGenerator_Edmonds,
     removeEdges
 };
-},{"./MD_Algorithms":10,"./MD_Errors":11}],15:[function(require,module,exports){
+},{"./MD_Algorithms":11,"./MD_Errors":12}],16:[function(require,module,exports){
 /*Converted to JS from Python by Matt Krick. Original: http://jorisvr.nl/maximummatching.html*/
 
 /**
  * 
- * @param {Array[NumberArray[3]]} edges Array of edges in format [node_from, node_to, weight], , node_from and node_to are indexes (starting from 0) of nodes, weight is wight of edge between this nodes
+ * @param {Array[NumberArray[3]]} edges Array of edges in format [node_from, node_to, weight], , node_from and node_to are indexes (starting from 0) of nodes, weight is weight of edge between this nodes
  * @param {Boolean} maxCardinality if True, maximum possible count of edges has prirority over maximum sum of weigts 
  * @returns {IntArray} index of array is index of node_from, value is index of node_to of matching edges, -1 if (index) node is not matched
  */
@@ -2557,7 +2797,7 @@ function blossom (edges, maxCardinality = true) {
   }
 
   module.exports = {blossom};
-},{}],16:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 // const {
 //     MD_Score_Simple,
 //     MD_Score_Composite,
@@ -2568,15 +2808,19 @@ function blossom (edges, maxCardinality = true) {
 //     MD_Result_Sets_Points,
 // } = require('./Competition/MD_Result');
 const {
-    Participant_Radon,
-    Tournament_Swiss_Radon,
-} = require('./Competition_Custom/Swiss_Radon');
+    Participant_Elo_Radon,
+    Tournament_Elo_Radon,
+} = require('./Competition_Custom/Elo_Radon');
+const{
+    MD_Club,
+} = require('./Competition/MD_Club');
 
 console.log("See examples in showroom directory for usage example.");
 
 module.exports = {
-    Participant_Radon,
-    Tournament_Swiss_Radon,
+    Participant_Elo_Radon,
+    Tournament_Elo_Radon,
+    MD_Club,
 };
-},{"./Competition_Custom/Swiss_Radon":9}]},{},[16])(16)
+},{"./Competition/MD_Club":1,"./Competition_Custom/Elo_Radon":10}]},{},[17])(17)
 });

@@ -179,7 +179,9 @@ class Match_Elo_Radon extends MD_Match{
     }
 
     get elo_begin(){return this.md_data.elo_begin;}
-    set elo_begin(elo_begin){this.elo_begin = elo_begin;}
+    set elo_begin(elo_begin){
+        this.md_data.elo_begin = elo_begin ? [...elo_begin] : [];
+    };
 
     toString(){
         let change_string = this.isUnplayed() ? "" : `-> změna o ${this.elo_change().map(chng => chng.toFixed(2)).join(" x ")}`;
@@ -357,8 +359,6 @@ class Tournament_Elo_Radon extends MD_Competition{
             weights.forEach(edge => {
                 if(arg_obj.participants_to_draw[edge[0]].club === arg_obj.participants_to_draw[edge[1]].club){
                     edge[2] = edge[2]-decreasing_value;
-                    //edge[2] = Math.max(edge[2]-decreasing_value, 0); /* no negative weights */
-                    //edge[2] /= decreasing_value;
                 }
             });
         }
@@ -385,9 +385,7 @@ class Tournament_Elo_Radon extends MD_Competition{
         arg_obj.participants_to_draw = arg_obj.participants_to_draw || this.get_participants();
         arg_obj.must_play_participants = arg_obj.must_play_participants || [];
         arg_obj.same_club_penalty = arg_obj.same_club_penalty || 4;
-        arg_obj.weights_policy = arg_obj.weights_policy || POLICY_EDMOND_WEIGHTS.E2E_SORTED_LINEAR_PLUS_FRACTIONAL_LINEAR;
-        
-        this.sortResults();
+        arg_obj.weights_policy = arg_obj.weights_policy || POLICY_EDMOND_WEIGHTS.E2E_SORTED_NEGATIVE_LINEAR_PLUS_FRACTIONAL;
 
         let {matches, singletons} = one4each(arg_obj.participants_to_draw, this.generate_weights(arg_obj));
                      
@@ -419,15 +417,17 @@ class Tournament_Elo_Radon extends MD_Competition{
             throw new UnexpectedCall("draw()", "Turnaj se hraje na 6 klasických kol a případně jedno kompenzační - ty již byly odehrány.");
         }
 
-        let participants_to_draw, must_play_participants, same_club_penalty /* by this value will be divided value of edge, so 1 is no penalty */;
+        this.sortResults();
+
+        let participants_to_draw, must_play_participants, same_club_penalty /* this value will be subtracted of value of edge, so 0 is no penalty */;
         if(actual_round <= rounds_num){ /* regular round */
             participants_to_draw = this.get_participants();
             must_play_participants = this.overall_singletons;
-            if (actual_round <= rounds_num/2){
-                same_club_penalty = participants_to_draw.length+1; /* no same club in first half */
-            }else if(actual_round === rounds_num/2 + 1){
-                same_club_penalty = 2;
-            }else{ /* last two (on 6 rounds) with no penalty */
+            if (actual_round < rounds_num/2+1){ /* first half */
+                same_club_penalty = participants_to_draw.length+1; /* no same club match */
+            }else if(actual_round < rounds_num){ /* second half without last match */
+                same_club_penalty = 3; /* small penalty */
+            }else{ /* last match */
                 same_club_penalty = 0; /* no penalty */
             }
         }else{ /* compensatory round */

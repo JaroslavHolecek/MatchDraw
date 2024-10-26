@@ -8,13 +8,17 @@
 //     MD_Result_Sets_Points,
 // } = require('./Competition/MD_Result');
 const {
-    Participant_Radon,
-    Tournament_Swiss_Radon,
-} = require('./Competition_Custom/Swiss_Radon');
+    Participant_Elo_Radon,
+    Tournament_Elo_Radon,
+} = require('./Competition_Custom/Elo_Radon');
+const{
+    MD_Club,
+} = require('./Competition/MD_Club');
 
 console.log("See examples in showroom directory for usage example.");
 
 module.exports = {
-    Participant_Radon,
-    Tournament_Swiss_Radon,
+    Participant_Elo_Radon,
+    Tournament_Elo_Radon,
+    MD_Club,
 };

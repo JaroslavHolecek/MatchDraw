@@ -1,16 +1,17 @@
 const { combinations } = require('./MD_Algorithms');
 const { NotSupportedAttributeValue } = require('./MD_Errors');
 
+/* EdmoondsBlossom looking for MAXIMUM of sum of weights, so greater value of weights is prefered in result over smaller value */
 const POLICY_EDMOND_WEIGHTS = {
     E2E_EQUAL: 0, /* Every to every, each edge has same weights === 1 */
     /* Do not account distance of individuals in order */
-    E2E_SORTED_LINEAR: 1, /* Every to every, weight is linear inverse of distance between indexes (max_distance - distance + 1) */
+    E2E_SORTED_LINEAR_INVERSE: 1, /* Every to every, weight is linear inverse of distance between indexes (max_distance - distance + 1) */
     /* 1. vs 4. and 2. vs 3. have same value as 1. vs 3. and 2. vs 4. -> wich is usually not good */
-    E2E_SORTED_FRACTIONAL_LINEAR: 2, /* Every to every, weight is linear fraction of distance between indexes (1 / distance) */
-    /* Here is hard to artificaly shift order of players for example with same club to greaterr distance
-        Shift is easy, but is irregulary distributed throught higher places of order and luwer one
+    E2E_SORTED_LINEAR_FRACTIONAL: 2, /* Every to every, weight is linear fraction of distance between indexes (1 / distance) */
+    /* Here is hard to artificaly shift order of players for example with same club to greater distance
+        Shift is easy, but is irregulary distributed throught higher places of order and lower one
     */
-   E2E_SORTED_LINEAR_PLUS_FRACTIONAL_LINEAR: 3, /* combine (sum) E2E_SORTED_LINEAR and E2E_SORTED_FRACTIONAL_LINEAR */
+    E2E_SORTED_NEGATIVE_LINEAR_PLUS_FRACTIONAL: 3, /* Every to every, weights are negative -> -(distance + 1/distance) */
 };
 
 /**
@@ -30,22 +31,22 @@ function weightsGenerator_Edmonds(num_individuals, policy){
                 edges.push([...nodes, 1]);
             });
             break;
-        case POLICY_EDMOND_WEIGHTS.E2E_SORTED_LINEAR:
+        case POLICY_EDMOND_WEIGHTS.E2E_SORTED_LINEAR_INVERSE:
             let comb_sl = combinations(num_individuals, 2);
             comb_sl.forEach(nodes => {
                 edges.push([...nodes, num_individuals - Math.abs(nodes[1] - nodes[0])]);
             });
             break;
-        case POLICY_EDMOND_WEIGHTS.E2E_SORTED_FRACTIONAL_LINEAR:
+        case POLICY_EDMOND_WEIGHTS.E2E_SORTED_LINEAR_FRACTIONAL:
             let comb_fl = combinations(num_individuals, 2);
             comb_fl.forEach(nodes => {
                 edges.push([...nodes, 1/Math.abs(nodes[1] - nodes[0])]);
             });
             break;
-        case POLICY_EDMOND_WEIGHTS.E2E_SORTED_LINEAR_PLUS_FRACTIONAL_LINEAR:
+        case POLICY_EDMOND_WEIGHTS.E2E_SORTED_NEGATIVE_LINEAR_PLUS_FRACTIONAL:
             let comb_lfl = combinations(num_individuals, 2);
             comb_lfl.forEach(nodes => {
-                edges.push([...nodes, num_individuals - Math.abs(nodes[1] - nodes[0]) + 1/Math.abs(nodes[1] - nodes[0])]);
+                edges.push([...nodes, -(Math.abs(nodes[1] - nodes[0]) + 1/Math.abs(nodes[1] - nodes[0]))]);
             });
             break;
         default:
@@ -56,7 +57,7 @@ function weightsGenerator_Edmonds(num_individuals, policy){
 
 /**
  * 
- * @param {Array[NumberArray[3]]} weights probalbly returned from weightsGenerator_Edmonds
+ * @param {Array[NumberArray[3]]} weights probably returned from weightsGenerator_Edmonds
  * @param {Array[NumberArray[2]]} to_remove array of edges (Array[2]) with from_index and to_index
  */
 function removeEdges(weights, to_remove){

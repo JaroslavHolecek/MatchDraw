@@ -35,6 +35,8 @@ const {
 
 /**
  * Basic class that holds connection between participant and overall result
+ * Participant can be any inner class - it is not checked here,
+ * because Participant will be read from Participants list in tournament
  */
 class MD_ParticipantResult extends MD_MasterClass {
     static md_description = "Hold connection between participant and its result."
