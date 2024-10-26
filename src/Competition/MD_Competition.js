@@ -226,7 +226,7 @@ class MD_Competition extends MD_MasterClass {
      * draw_matches is Array<Array> of drawed matches, that are array of participants in match
      */
     draw_inner(arg_obj){
-        let {matches, singletons} = every2every(this.get_participants());
+        let {matches, singletons} = every2every(this.get_participants_via_results());
         let draw_matches = [];
         let first_id = maxOfPropertyOfArray(this.matches, "id") + 1;
         matches.forEach((mtch, index) => {
@@ -323,6 +323,10 @@ class MD_Competition extends MD_MasterClass {
 
     getParticipantResult_byParticipantId(id){
         return this.participants_results.find(pr => pr.participant.id === id);
+    }
+
+    get_participants_via_results(){
+        return this.participants_results.map(prt_rslt => prt_rslt.participant);
     }
 
     get_participants(){

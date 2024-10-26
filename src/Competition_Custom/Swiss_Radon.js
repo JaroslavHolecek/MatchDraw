@@ -305,7 +305,7 @@ class Tournament_Swiss_Radon extends MD_Competition{
 
     draw_inner(arg_obj/*={participants_to_draw = all_participants, must_play_participants:[], same_club_penalty:4, weights_policy:POLICY_EDMOND_WEIGHTS.E2E_SORTED_FRACTIONAL_LINEAR}*/){
         arg_obj = arg_obj || {}
-        arg_obj.participants_to_draw = arg_obj.participants_to_draw || this.get_participants();
+        arg_obj.participants_to_draw = arg_obj.participants_to_draw || this.get_participants_via_results();
         arg_obj.must_play_participants = arg_obj.must_play_participants || [];
         arg_obj.same_club_penalty = arg_obj.same_club_penalty || 4;
         arg_obj.weights_policy = arg_obj.weights_policy || POLICY_EDMOND_WEIGHTS.E2E_SORTED_LINEAR_PLUS_FRACTIONAL_LINEAR;
@@ -343,7 +343,7 @@ class Tournament_Swiss_Radon extends MD_Competition{
 
         let participants_to_draw, must_play_participants, same_club_penalty /* by this value will be divided value of edge, so 1 is no penalty */;
         if(actual_round <= rounds_num){ /* regular round */
-            participants_to_draw = this.get_participants();
+            participants_to_draw = this.get_participants_via_results();
             must_play_participants = this.overall_singletons;
             if (actual_round <= rounds_num/2){
                 same_club_penalty = participants_to_draw.length+1; /* no same club in first half */

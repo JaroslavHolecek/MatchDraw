@@ -382,7 +382,7 @@ class Tournament_Elo_Radon extends MD_Competition{
 
     draw_inner(arg_obj/*={participants_to_draw = all_participants, must_play_participants:[], same_club_penalty:4, weights_policy:POLICY_EDMOND_WEIGHTS.E2E_SORTED_FRACTIONAL_LINEAR}*/){
         arg_obj = arg_obj || {}
-        arg_obj.participants_to_draw = arg_obj.participants_to_draw || this.get_participants();
+        arg_obj.participants_to_draw = arg_obj.participants_to_draw || this.get_participants_via_results();
         arg_obj.must_play_participants = arg_obj.must_play_participants || [];
         arg_obj.same_club_penalty = arg_obj.same_club_penalty || 4;
         arg_obj.weights_policy = arg_obj.weights_policy || POLICY_EDMOND_WEIGHTS.E2E_SORTED_NEGATIVE_LINEAR_PLUS_FRACTIONAL;
@@ -421,14 +421,14 @@ class Tournament_Elo_Radon extends MD_Competition{
 
         let participants_to_draw, must_play_participants, same_club_penalty /* this value will be subtracted of value of edge, so 0 is no penalty */;
         if(actual_round <= rounds_num){ /* regular round */
-            participants_to_draw = this.get_participants();
+            participants_to_draw = this.get_participants_via_results();
             must_play_participants = this.overall_singletons;
             if (actual_round < rounds_num/2+1){ /* first half */
                 same_club_penalty = participants_to_draw.length+1; /* no same club match */
             }else if(actual_round < rounds_num){ /* second half without last match */
                 same_club_penalty = 3; /* small penalty */
             }else{ /* last match */
-                same_club_penalty = 0; /* no penalty */
+                same_club_penalty = 0; /* even smaller penalty */
             }
         }else{ /* compensatory round */
             participants_to_draw = this.overall_singletons;
