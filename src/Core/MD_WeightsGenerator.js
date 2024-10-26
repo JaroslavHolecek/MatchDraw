@@ -12,6 +12,7 @@ const POLICY_EDMOND_WEIGHTS = {
         Shift is easy, but is irregulary distributed throught higher places of order and lower one
     */
     E2E_SORTED_NEGATIVE_LINEAR_PLUS_FRACTIONAL: 3, /* Every to every, weights are negative -> -(distance + 1/distance) */
+    E2E_SORTED_QUADRATIC_INVERSE: 4, /* Every to every, (max_distance+1)**2 - distance**2 */
 };
 
 /**
@@ -44,9 +45,15 @@ function weightsGenerator_Edmonds(num_individuals, policy){
             });
             break;
         case POLICY_EDMOND_WEIGHTS.E2E_SORTED_NEGATIVE_LINEAR_PLUS_FRACTIONAL:
-            let comb_lfl = combinations(num_individuals, 2);
-            comb_lfl.forEach(nodes => {
+            let comb_nlpf = combinations(num_individuals, 2);
+            comb_nlpf.forEach(nodes => {
                 edges.push([...nodes, -(Math.abs(nodes[1] - nodes[0]) + 1/Math.abs(nodes[1] - nodes[0]))]);
+            });
+            break;
+        case POLICY_EDMOND_WEIGHTS.E2E_SORTED_QUADRATIC_INVERSE:
+            let comb_sqi = combinations(num_individuals, 2);
+            comb_sqi.forEach(nodes => {
+                edges.push([...nodes, num_individuals**2 - (nodes[1] - nodes[0])**2]);
             });
             break;
         default:
