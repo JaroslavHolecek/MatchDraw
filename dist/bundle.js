@@ -1550,8 +1550,6 @@ class Tournament_Elo_Radon extends MD_Competition{
             .sort((a, b) => b.eloChange - a.eloChange);
     } 
     
-
-
     addSingletons(singletons){
         this.overall_singletons.push(...singletons);
     }
@@ -1641,12 +1639,12 @@ class Tournament_Elo_Radon extends MD_Competition{
         return weights;
     }
 
-    draw_inner(arg_obj/*={participants_to_draw = all_participants, must_play_participants:[], same_club_penalty:4, weights_policy:POLICY_EDMOND_WEIGHTS.E2E_SORTED_FRACTIONAL_LINEAR}*/){
+    draw_inner(arg_obj/*={participants_to_draw = all_participants, must_play_participants:[], same_club_penalty:4, weights_policy:POLICY_EDMOND_WEIGHTS.E2E_SORTED_LINEAR_INVERSE_PLUS_FRACTIONAL_INVERSE}*/){
         arg_obj = arg_obj || {}
         arg_obj.participants_to_draw = arg_obj.participants_to_draw || this.get_participants_via_results();
         arg_obj.must_play_participants = arg_obj.must_play_participants || [];
         arg_obj.same_club_penalty = arg_obj.same_club_penalty || 4;
-        arg_obj.weights_policy = arg_obj.weights_policy || POLICY_EDMOND_WEIGHTS.E2E_SORTED_QUADRATIC_INVERSE;
+        arg_obj.weights_policy = arg_obj.weights_policy || POLICY_EDMOND_WEIGHTS.E2E_SORTED_LINEAR_INVERSE_PLUS_FRACTIONAL_INVERSE;
 
         let {matches, singletons} = one4each(arg_obj.participants_to_draw, this.generate_weights(arg_obj));
                      
@@ -1680,32 +1678,45 @@ class Tournament_Elo_Radon extends MD_Competition{
 
         this.sortResults();
 
-        let participants_to_draw, must_play_participants, same_club_penalty /* this value will be subtracted of value of edge, so 0 is no penalty */;
+        let participants_to_draw, excluded_participant=null, same_club_penalty /* this value will be subtracted of value of edge, so 0 is no penalty */;
         if(actual_round <= rounds_num){ /* regular round */
             participants_to_draw = this.get_participants_via_results();
-            must_play_participants = this.overall_singletons;
+
+            if (participants_to_draw.length % 2 !== 0){ /* odd number of participants */
+                for (let i = participants_to_draw.length - 1; i >= 0; i--) { /* find participant from bottom of order */
+                    if (!this.overall_singletons.includes(participants_to_draw[i])) { /* that is not already skip some round  */
+                        excluded_participant = participants_to_draw.splice(i, 1); /* return array of 1 elements */
+                        break;
+                    }
+                }
+                this.addSingletons(excluded_participant); /* add to singleton(s) */
+            }
+            
+
+            // must_play_participants = this.overall_singletons; /* no needed when odd participant is already excluded */
             if (actual_round < rounds_num/2+1){ /* first half */
-                same_club_penalty = participants_to_draw.length**2; /* no same club match */
+                same_club_penalty = participants_to_draw.length; /* no same club match */
             }else if(actual_round < rounds_num){ /* second half without last match */
-                same_club_penalty = 15; /* in quadratic 15 penalty is 3 places penalty */
+                same_club_penalty = 5; /* shift of 5 places (jump over 4 participants) */
             }else{ /* last match */
                 same_club_penalty = 0; /* no penalty */
             }
         }else{ /* compensatory round */
             participants_to_draw = this.overall_singletons;
-            must_play_participants = [];
-            same_club_penalty = 5; /* in quadratic 5 penalty is 1 place penalty */
+            same_club_penalty = 3; /* shift of 3 places (jump over 2 participant) */
         }
-
 
         let res = this.draw_inner({
             participants_to_draw : participants_to_draw,
-            must_play_participants : must_play_participants,
+            must_play_participants : [],
             same_club_penalty : same_club_penalty
         });
+        if (excluded_participant){
+            res.draw_singletons.push(...excluded_participant);
+        }
         
         this.number_of_played_round += 1;
-        this.addSingletons(res.draw_singletons);
+        // this.addSingletons(res.draw_singletons); /* no singletons when odd participant already excluded */
 
         return res;
     }
@@ -2092,6 +2103,7 @@ const { combinations } = require('./MD_Algorithms');
 const { NotSupportedAttributeValue } = require('./MD_Errors');
 
 /* EdmoondsBlossom looking for MAXIMUM of sum of weights, so greater value of weights is prefered in result over smaller value */
+/* Linear streategies have advatige, that you can artificialy shift participants by setting penalty (for example -5 of weight value) and this is same shift along whole participant list */
 const POLICY_EDMOND_WEIGHTS = {
     E2E_EQUAL: 0, /* Every to every, each edge has same weights === 1 */
     /* Do not account distance of individuals in order */
@@ -2102,7 +2114,8 @@ const POLICY_EDMOND_WEIGHTS = {
         Shift is easy, but is irregulary distributed throught higher places of order and lower one
     */
     E2E_SORTED_NEGATIVE_LINEAR_PLUS_FRACTIONAL: 3, /* Every to every, weights are negative -> -(distance + 1/distance) */
-    E2E_SORTED_QUADRATIC_INVERSE: 4, /* Every to every, (max_distance+1)**2 - distance**2 */
+    E2E_SORTED_LINEAR_INVERSE_PLUS_FRACTIONAL_INVERSE: 4, /* Every to every, weights are negative -> (max_distance - distance + 1) + (1 - 1/(max_distance - distance + 1) ) */
+    E2E_SORTED_QUADRATIC_INVERSE: 5, /* Every to every, (max_distance+1)**2 - distance**2 - its nice, but shifting participants is not trivial */
 };
 
 /**
@@ -2138,6 +2151,14 @@ function weightsGenerator_Edmonds(num_individuals, policy){
             let comb_nlpf = combinations(num_individuals, 2);
             comb_nlpf.forEach(nodes => {
                 edges.push([...nodes, -(Math.abs(nodes[1] - nodes[0]) + 1/Math.abs(nodes[1] - nodes[0]))]);
+            });
+            break;
+        case POLICY_EDMOND_WEIGHTS.E2E_SORTED_LINEAR_INVERSE_PLUS_FRACTIONAL_INVERSE:
+            let comb_slipfi = combinations(num_individuals, 2);
+            let tmp;
+            comb_slipfi.forEach(nodes => {
+                tmp = num_individuals - Math.abs(nodes[1] - nodes[0]);
+                edges.push([...nodes, tmp + (tmp-1)/tmp]);
             });
             break;
         case POLICY_EDMOND_WEIGHTS.E2E_SORTED_QUADRATIC_INVERSE:
