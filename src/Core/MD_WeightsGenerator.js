@@ -2,6 +2,7 @@ const { combinations } = require('./MD_Algorithms');
 const { NotSupportedAttributeValue } = require('./MD_Errors');
 
 /* EdmoondsBlossom looking for MAXIMUM of sum of weights, so greater value of weights is prefered in result over smaller value */
+/* Linear streategies have advatige, that you can artificialy shift participants by setting penalty (for example -5 of weight value) and this is same shift along whole participant list */
 const POLICY_EDMOND_WEIGHTS = {
     E2E_EQUAL: 0, /* Every to every, each edge has same weights === 1 */
     /* Do not account distance of individuals in order */
@@ -12,7 +13,8 @@ const POLICY_EDMOND_WEIGHTS = {
         Shift is easy, but is irregulary distributed throught higher places of order and lower one
     */
     E2E_SORTED_NEGATIVE_LINEAR_PLUS_FRACTIONAL: 3, /* Every to every, weights are negative -> -(distance + 1/distance) */
-    E2E_SORTED_QUADRATIC_INVERSE: 4, /* Every to every, (max_distance+1)**2 - distance**2 */
+    E2E_SORTED_LINEAR_INVERSE_PLUS_FRACTIONAL_INVERSE: 4, /* Every to every, weights are negative -> (max_distance - distance + 1) + (1 - 1/(max_distance - distance + 1) ) */
+    E2E_SORTED_QUADRATIC_INVERSE: 5, /* Every to every, (max_distance+1)**2 - distance**2 - its nice, but shifting participants is not trivial */
 };
 
 /**
@@ -48,6 +50,14 @@ function weightsGenerator_Edmonds(num_individuals, policy){
             let comb_nlpf = combinations(num_individuals, 2);
             comb_nlpf.forEach(nodes => {
                 edges.push([...nodes, -(Math.abs(nodes[1] - nodes[0]) + 1/Math.abs(nodes[1] - nodes[0]))]);
+            });
+            break;
+        case POLICY_EDMOND_WEIGHTS.E2E_SORTED_LINEAR_INVERSE_PLUS_FRACTIONAL_INVERSE:
+            let comb_slipfi = combinations(num_individuals, 2);
+            let tmp;
+            comb_slipfi.forEach(nodes => {
+                tmp = num_individuals - Math.abs(nodes[1] - nodes[0]);
+                edges.push([...nodes, tmp + (tmp-1)/tmp]);
             });
             break;
         case POLICY_EDMOND_WEIGHTS.E2E_SORTED_QUADRATIC_INVERSE:
