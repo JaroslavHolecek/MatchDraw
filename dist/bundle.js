@@ -380,6 +380,10 @@ class MD_Competition extends MD_MasterClass {
         return this.participants;
     }
 
+    get_participant_via_Id(id){
+        return this.participants.find(prtcpnt => prtcpnt.id === id);
+    }
+
     get_participants_Ids(){
         return this.participants.map(prtcpnt => prtcpnt.id);
     }
@@ -1503,6 +1507,15 @@ class Tournament_Elo_Radon extends MD_Competition{
         if(!('clubs' in data)){
             throw new IncorrectValues(this.md_name, "clubs has to be set");
         }
+        if(!Array.isArray(data.clubs)){
+            throw new IncorrectValues(this.md_name, "clubs has to be array");
+        }
+        if(!('forrbiden_matches' in data)){
+            throw new IncorrectValues(this.md_name, "forrbiden_matches has to be set");
+        }
+        if(!Array.isArray(data.forrbiden_matches)){
+            throw new IncorrectValues(this.md_name, "forrbiden_matches has to be array");
+        }
 
         if(check_recursively){
             data.clubs.forEach(club => {
@@ -1516,7 +1529,10 @@ class Tournament_Elo_Radon extends MD_Competition{
         gg.number_of_played_round = gg.number_of_played_round || 0;
         gg.overall_singletons = gg.overall_singletons || [];
         gg.clubs = gg.clubs || [];
+        gg.not_draw_players = gg.not_draw_players || [];
+        gg.forrbiden_matches = gg.forrbiden_matches || [];
         super(gg);
+
     }
 
     get date(){return this.md_data.date;}
@@ -1526,6 +1542,10 @@ class Tournament_Elo_Radon extends MD_Competition{
     get number_of_played_round(){return this.md_data.number_of_played_round;}
     set number_of_played_round(number_of_played_round){this.md_data.number_of_played_round = number_of_played_round;}
     get overall_singletons(){return this.md_data.overall_singletons;}
+    set not_draw_players(not_draw_players){this.md_data.not_draw_players = not_draw_players;}
+    get not_draw_players(){return this.md_data.not_draw_players;}
+    set forrbiden_matches(forrbiden_matches){this.md_data.forrbiden_matches = forrbiden_matches;}
+    get forrbiden_matches(){return this.md_data.forrbiden_matches;}
 
     get clubs(){return this.md_data.clubs;}
 
@@ -1554,6 +1574,14 @@ class Tournament_Elo_Radon extends MD_Competition{
         this.overall_singletons.push(...singletons);
     }
 
+    addNotDrawPlayer(player){
+        this.not_draw_players.push(player);
+    }
+
+    addForbiddenMatch(match){
+        this.forrbiden_matches.push(match);
+    }
+
     toJSON(){
         return {
             ...super.toJSON(),
@@ -1562,6 +1590,8 @@ class Tournament_Elo_Radon extends MD_Competition{
             number_of_played_round: this.number_of_played_round,
             overall_singletons_id: this.overall_singletons.map(sngl => {return sngl.id;} ),
             clubs: this.md_data.clubs,
+            not_draw_players_id: this.not_draw_players.map(p => {return p.id;}),
+            forrbiden_matches: this.forrbiden_matches,
         };
     }
 
@@ -1580,6 +1610,8 @@ class Tournament_Elo_Radon extends MD_Competition{
             number_of_played_round: obj.number_of_played_round,
             overall_singletons: obj.overall_singletons_id.map(sngl_id => {return baseInstance.participants.find(pr => sngl_id === pr.id );}),
             clubs: obj.clubs,
+            not_draw_players: obj.not_draw_players_id.map(p_id => {return baseInstance.participants.find(pr => p_id === pr.id );}),
+            forrbiden_matches: obj.forrbiden_matches.map(mtch => this.innerClassMatch.fromObject(mtch, support))
         });
     }
 
@@ -1610,6 +1642,10 @@ class Tournament_Elo_Radon extends MD_Competition{
         /* remove edges of already drawen match -> do not repeat already played matches */
         removeEdges(weights,
             this.matches.map(match => {return match.participants.map(p => p.tmp_id)})
+        );
+
+        removeEdges(weights,
+            this.forrbiden_matches.map(match => {return match.participants.map(p => p.tmp_id)})
         );
 
         /* decrease value of edges between participant from same club */
@@ -1649,7 +1685,12 @@ class Tournament_Elo_Radon extends MD_Competition{
         let {matches, singletons} = one4each(arg_obj.participants_to_draw, this.generate_weights(arg_obj));
                      
         /* every draw match add to tournament matches */
-        let first_id = this.matches.length+1;
+        let first_id = maxOfArray(this.matches.map(match => match.id));
+        if(!first_id || first_id < 0){
+            first_id = 1;
+        }else{ 
+            first_id += 1;
+        }
         let draw_matches = [];
         matches.forEach((mtch, index) => {
             draw_matches.push(new this.constructor.innerClassMatch({
@@ -1681,6 +1722,9 @@ class Tournament_Elo_Radon extends MD_Competition{
         let participants_to_draw, excluded_participant=null, same_club_penalty /* this value will be subtracted of value of edge, so 0 is no penalty */;
         if(actual_round <= rounds_num){ /* regular round */
             participants_to_draw = this.get_participants_via_results();
+            this.not_draw_players.forEach(prtcpnt => {
+                participants_to_draw.splice(participants_to_draw.findIndex(p => p.id === prtcpnt.id), 1);
+            });
 
             if (participants_to_draw.length % 2 !== 0){ /* odd number of participants */
                 for (let i = participants_to_draw.length - 1; i >= 0; i--) { /* find participant from bottom of order */

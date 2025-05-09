@@ -62,202 +62,129 @@ let match = null;
 let {draw_singletons, draw_matches } = showroomTournament.draw();
 showroomTournament.arrangeMatches();
 
+let mtch_tmp = draw_matches;
+let sngltn_tmp = draw_singletons;
+
+/* Draw second round */
+({draw_singletons, draw_matches} = showroomTournament.draw());
+showroomTournament.arrangeMatches();
+let draw_matches_prep = draw_matches;
+let draw_singletons_prep = draw_singletons;
+draw_matches = mtch_tmp;
+draw_singletons = sngltn_tmp;
+
 /* Show first round */
 showroomTournament.showCountedOrder();
 showListOfObjects("Matches (1. round):", draw_matches);
 showListOfObjects("Participants without match:", draw_singletons);
 
 /* Fill score of first round matches */
-while(true){
-    match = showroomTournament.getNextUnplayedMatch(); 
-    if(!match) break;
+draw_matches.forEach(match => {
     showroomTournament.setScoreValuesOfMatch(match, generateScore_random());
     showroomTournament.add_matchToResults(match);
-}
+});
 showListOfObjects("Matches (1. round filled):", draw_matches);
 
-/* Draw second round - bottom */
+
+/* Draw third round */
+mtch_tmp = draw_matches_prep;
+sngltn_tmp = draw_singletons_prep;
 ({draw_singletons, draw_matches } = showroomTournament.draw());
 showroomTournament.arrangeMatches();
+draw_matches_prep = draw_matches;
+draw_singletons_prep = draw_singletons;
+draw_matches = mtch_tmp;
+draw_singletons = sngltn_tmp;
 
 /* Show second round */
 showroomTournament.showCountedOrder();
-showListOfObjects("Matches (2. round bottom):", draw_matches);
+showListOfObjects("Matches (2. round):", draw_matches);
 showListOfObjects("Participants without match:", draw_singletons);
 
 /* Fill score of second round matches */
-while(true){
-    match = showroomTournament.getNextUnplayedMatch(); 
-    if(!match) break;
+draw_matches.forEach(match => {
     showroomTournament.setScoreValuesOfMatch(match, generateScore_random());
     showroomTournament.add_matchToResults(match);
-}
-showListOfObjects("Matches (2. round bottom filled):", draw_matches);
+});
+showListOfObjects("Matches (2. round filled):", draw_matches);
 
-/* Draw second round - top */
+/* Draw fourth round */
+mtch_tmp = draw_matches_prep;
+sngltn_tmp = draw_singletons_prep;
 ({draw_singletons, draw_matches } = showroomTournament.draw());
 showroomTournament.arrangeMatches();
+draw_matches_prep = draw_matches;
+draw_singletons_prep = draw_singletons;
+draw_matches = mtch_tmp;
+draw_singletons = sngltn_tmp;
 
-/* Show second round */
-showListOfObjects("Matches (2. round top):", draw_matches);
+/* Show third round */
+showroomTournament.showCountedOrder();
+showListOfObjects("Matches (3. round):", draw_matches);
 showListOfObjects("Participants without match:", draw_singletons);
 
-/* Draw third round - bottom */
-({draw_singletons, draw_matches } = showroomTournament.draw());
-showroomTournament.arrangeMatches();
-
-/* Fill score of second round and third bottom matches */
-while(true){
-    match = showroomTournament.getNextUnplayedMatch(); 
-    if(!match) break;
+/* Fill score of third round matches */
+draw_matches.forEach(match => {
     showroomTournament.setScoreValuesOfMatch(match, generateScore_random());
     showroomTournament.add_matchToResults(match);
-}
+});
+showListOfObjects("Matches (3. round filled):", draw_matches);
 
 showroomTournament.addNotDrawPlayer(showroomTournament.get_participant_via_Id(1));
 showroomTournament.addNotDrawPlayer(showroomTournament.get_participant_via_Id(2));
 
-/* Show third round bottom */
-showroomTournament.showCountedOrder();
-showListOfObjects("Matches (3. round bottom filled):", draw_matches);
-showListOfObjects("Participants without match:", draw_singletons);
-
-/* Draw third round mid */
-({draw_singletons, draw_matches } = showroomTournament.draw());
-showroomTournament.arrangeMatches();
-
-/* Show third round */
-showListOfObjects("Matches (3. round mid):", draw_matches);
-showListOfObjects("Participants without match:", draw_singletons);
-
 /* Fill score of third round matches */
-while(true){
-    match = showroomTournament.getNextUnplayedMatch(); 
-    if(!match) break;
+draw_matches_prep.forEach(match => {
     showroomTournament.setScoreValuesOfMatch(match, generateScore_random());
     showroomTournament.add_matchToResults(match);
-}
-showListOfObjects("Matches (3. round mid filled):", draw_matches);
-
-/* Draw third round - top */
-({draw_singletons, draw_matches } = showroomTournament.draw());
-showroomTournament.arrangeMatches();
-
-/* Show third round */
-showListOfObjects("Matches (3. round top):", draw_matches);
-showListOfObjects("Participants without match:", draw_singletons);
-
-/* Draw fourt round - bottom */
-({draw_singletons, draw_matches } = showroomTournament.draw());
-showroomTournament.arrangeMatches();
-
-/* Show third round */
-showListOfObjects("Matches (4. round bottom):", draw_matches);
-showListOfObjects("Participants without match:", draw_singletons);
-
-/* Fill score of third round and fourth bottom matches */
-while(true){
-    match = showroomTournament.getNextUnplayedMatch(); 
-    if(!match) break;
-    showroomTournament.setScoreValuesOfMatch(match, generateScore_random());
-    showroomTournament.add_matchToResults(match);
-}
-showListOfObjects("Matches (4. round bottom filled):", draw_matches);
-
-/* Draw fourth round top */
-({draw_singletons, draw_matches } = showroomTournament.draw());
-showroomTournament.arrangeMatches();
-
-/* Show fourth round */
-showroomTournament.showCountedOrder();
-showListOfObjects("Matches (4. round top):", draw_matches);
-showListOfObjects("Participants without match:", draw_singletons);
-
-/* Fill score of fourth round matches */
-while(true){
-    match = showroomTournament.getNextUnplayedMatch(); 
-    if(!match) break;
-    showroomTournament.setScoreValuesOfMatch(match, generateScore_random());
-    showroomTournament.add_matchToResults(match);
-}
-showListOfObjects("Matches (4. round filled top):", draw_matches);
+});
+showListOfObjects("Matches (4. round filled):", draw_matches_prep);
+showListOfObjects("Participants without match:", draw_singletons_prep);
 
 showroomTournament.sortResults();
 showroomTournament.showCountedOrder();
 
 console.log("====== RESTORED FROM JSON =======");
 
-
-let trnmntJSON = JSON.stringify(showroomTournament.toJSON());
+let trnmntJSON = JSON.stringify(showroomTournament.toJSON(), null, 2);
 console.log(trnmntJSON);
 
 let restoredTrnmnt = Tournament_Elo_Radon.fromJSON(JSON.parse(trnmntJSON));
 restoredTrnmnt.showCountedOrder();
 
-/* Draw fifth round bottom */
+/* Draw fifth round */
 ({draw_singletons, draw_matches } = restoredTrnmnt.draw());
 restoredTrnmnt.arrangeMatches();
+
+/* Draw sixth round */
+mtch_tmp = draw_matches_prep;
+sngltn_tmp = draw_singletons_prep;
+({draw_singletons, draw_matches } = showroomTournament.draw());
+showroomTournament.arrangeMatches();
+draw_matches_prep = draw_matches;
+draw_singletons_prep = draw_singletons;
+draw_matches = mtch_tmp;
+draw_singletons = sngltn_tmp;
 
 /* Show fifth round */
 restoredTrnmnt.showCountedOrder();
 showListOfObjects("Matches (5. round):", draw_matches);
 showListOfObjects("Participants without match:", draw_singletons);
 
-/* Draw fifth round mid */
-({draw_singletons, draw_matches } = restoredTrnmnt.draw());
-restoredTrnmnt.arrangeMatches();
-
-/* Show fifth round */
+/* Show sixth round */
 restoredTrnmnt.showCountedOrder();
-showListOfObjects("Matches (5. round):", draw_matches);
-showListOfObjects("Participants without match:", draw_singletons);
+showListOfObjects("Matches (6. round):", draw_matches_prep);
+showListOfObjects("Participants without match:", draw_singletons_prep);
 
-/* Draw fifth round top */
-({draw_singletons, draw_matches } = restoredTrnmnt.draw());
-restoredTrnmnt.arrangeMatches();
-
-/* Show fifth round */
-restoredTrnmnt.showCountedOrder();
-showListOfObjects("Matches (5. round):", draw_matches);
-showListOfObjects("Participants without match:", draw_singletons);
-
-/* Fill score of fifth round matches */
+/* Fill score of fifth and sixth round matches */
 while(true){
     match = restoredTrnmnt.getNextUnplayedMatch(); 
     if(!match) break;
     restoredTrnmnt.setScoreValuesOfMatch(match, generateScore_random());
     restoredTrnmnt.add_matchToResults(match);
 }
-showListOfObjects("Matches (5. round top filled):", draw_matches);
-
-/* Draw sixth round bottom */
-restoredTrnmnt.sortResults();
-({draw_singletons, draw_matches } = restoredTrnmnt.draw());
-restoredTrnmnt.arrangeMatches();
-
-/* Show sixth round */
-restoredTrnmnt.showCountedOrder();
-showListOfObjects("Matches (6. round bottom):", draw_matches);
-showListOfObjects("Participants without match:", draw_singletons);
-
-/* Draw sixth round top */
-restoredTrnmnt.sortResults();
-({draw_singletons, draw_matches } = restoredTrnmnt.draw());
-restoredTrnmnt.arrangeMatches();
-
-/* Show sixth round */
-restoredTrnmnt.showCountedOrder();
-showListOfObjects("Matches (6. round top):", draw_matches);
-showListOfObjects("Participants without match:", draw_singletons);
-
-/* Fill score of sixth round matches */
-while(true){
-    match = restoredTrnmnt.getNextUnplayedMatch(); 
-    if(!match) break;
-    restoredTrnmnt.setScoreValuesOfMatch(match, generateScore_random());
-    restoredTrnmnt.add_matchToResults(match);
-}
-showListOfObjects("Matches (6. round top filled):", draw_matches);
+showListOfObjects("Matches (5. round filled):", draw_matches);
+showListOfObjects("Matches (6. round filled):", draw_matches_prep);
 
 /* Draw restored compensatory round */
 ({draw_singletons, draw_matches } = restoredTrnmnt.draw());

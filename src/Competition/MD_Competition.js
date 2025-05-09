@@ -333,6 +333,10 @@ class MD_Competition extends MD_MasterClass {
         return this.participants;
     }
 
+    get_participant_via_Id(id){
+        return this.participants.find(prtcpnt => prtcpnt.id === id);
+    }
+
     get_participants_Ids(){
         return this.participants.map(prtcpnt => prtcpnt.id);
     }
